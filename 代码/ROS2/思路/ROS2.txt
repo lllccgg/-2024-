@@ -1,0 +1,10 @@
+发布者pub_node用C++，节点名称为/lcg
+订阅者sub_node用Python，节点名称为/lcg1
+（1）原数据类型为std::string的字符串话题：
+发布者：用std_msgs::msg::String msg的data去接受要发送的字符串，再用rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_str发布者把msg发布出去
+订阅者：创建订阅者，用回调函数订阅发布者发布的msg的data
+（2）原数据类型为cv::Mat的图像话题：
+发布者：创建cv_bridge::CvImage cv_img对象，设置消息头、编码格式、加载图像，再用toImageMsg()转换为ROS2消息sensor_msgs::msg::Image::SharedPtr pub_img，用rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_mat发布者把img发布出去
+订阅者：创建订阅者，用回调函数订阅发布者发布的img，并用bridge.imgmsg_to_cv2把ROS2消息转化为cv::Mat类型，并用waitKey(0)停留显示图像。
+（3）附加题的两个参数：
+在发布者中用declare_parameter定义两个参数，num（int类型）和color（string类型），并用定时器通过回调函数定时显示这两个参数。可以在另一个终端运行命令：ros2 param get /lcg num(color)获取参数值；ros2 param set /lcg num 48或ros2 param set /lcg color red修改参数值。
