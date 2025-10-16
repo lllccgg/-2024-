@@ -1,0 +1,2 @@
+export_to_onnx.py是将训练完生成的模型pth文件转换为onnx类型
+LeNet5_end.py是最后的模型训练代码
