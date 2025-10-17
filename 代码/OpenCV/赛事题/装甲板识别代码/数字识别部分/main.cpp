@@ -9,8 +9,6 @@
 using namespace cv;
 using namespace std;
 
-string img_path = "D:\\Opencvpracticedata\\NumClassifier2.png";
-
 // 全局变量
 namespace Config {
     int BINARY_THRESHOLD = 130; // 预处理二值化阈值
@@ -48,8 +46,7 @@ namespace Config {
     float MIN_ARMOR_ASPECT_RATIO = 1.5f; // 最小装甲板宽高比
     float MAX_ARMOR_ASPECT_RATIO = 30.0f; // 最大装甲板宽高比
 
-    const char*const svm_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\svm_model3.xml"; // svm模型路径
-	const char* const onnx_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\best1.onnx"; // onnx模型路径
+	const char* const onnx_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\bestv11.onnx"; // onnx模型路径
 
     int bianry = 1; // 输入模型的图像二值化阈值
 	int roi_x = 16; // ROI区域x方向
@@ -102,10 +99,6 @@ int main()
 
 	Rect l_light_roi; // 左侧灯条ROI区域
 	Rect r_light_roi; // 右侧灯条ROI区域
-
-	//resize(srcImg, srcImg, Size(Config::IMAGE_WIDTH, Config::IMAGE_HEIGHT));
-    //srcImg = imread(img_path);
-
 
     while (true)
     {   
