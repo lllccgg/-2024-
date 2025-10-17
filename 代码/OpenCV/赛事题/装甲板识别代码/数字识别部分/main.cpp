@@ -11,97 +11,97 @@ using namespace std;
 
 string img_path = "D:\\Opencvpracticedata\\NumClassifier2.png";
 
-// È«¾Ö±äÁ¿
+// å…¨å±€å˜é‡
 namespace Config {
-    int BINARY_THRESHOLD = 130; // Ô¤´¦Àí¶şÖµ»¯ãĞÖµ
+    int BINARY_THRESHOLD = 130; // é¢„å¤„ç†äºŒå€¼åŒ–é˜ˆå€¼
 
-    int h_low = 15; // HSVÏÂÏŞH
-    int s_low = 0; // HSVÏÂÏŞS
-    int v_low = 50; // HSVÏÂÏŞV
-    int h_high = 130; // HSVÉÏÏŞH
-    int s_high = 175; // HSVÉÏÏŞS
-    int v_high = 255; // HSVÉÏÏŞV
+    int h_low = 15; // HSVä¸‹é™H
+    int s_low = 0; // HSVä¸‹é™S
+    int v_low = 15; // HSVä¸‹é™V
+    int h_high = 130; // HSVä¸Šé™H
+    int s_high = 175; // HSVä¸Šé™S
+    int v_high = 255; // HSVä¸Šé™V
 
-    Scalar lower_blue(Config::h_low, Config::s_low, Config::v_low);   // H, S, V ÏÂÏŞ
-    Scalar upper_blue(Config::h_high, Config::s_high, Config::v_high); // H, S, V ÉÏÏŞ
+    Scalar lower_blue(Config::h_low, Config::s_low, Config::v_low);   // H, S, V ä¸‹é™
+    Scalar upper_blue(Config::h_high, Config::s_high, Config::v_high); // H, S, V ä¸Šé™
 
-	int kernel1_size = 1; // ±ÕÔËËãºË´óĞ¡
-	int kernel2_size = 3; // ¸¯Ê´ºË´óĞ¡
-	int kernel3_size = 3; // ±ÕÔËËãºË2´óĞ¡
-	int interations = 1; // ¸¯Ê´²Ù×÷µü´ú´ÎÊı
+	int kernel1_size = 1; // é—­è¿ç®—æ ¸å¤§å°
+	int kernel2_size = 3; // è…èš€æ ¸å¤§å°
+	int kernel3_size = 3; // é—­è¿ç®—æ ¸2å¤§å°
+	int interations = 1; // è…èš€æ“ä½œè¿­ä»£æ¬¡æ•°
 
-    int line1 = 16; // ´¹Ö±ÏßºËµÚÒ»¸ö²ÎÊı
-    int line2 = 1; // ´¹Ö±ÏßºËµÚ¶ş¸ö²ÎÊı
-    int clean1 = 1; // ÇåÀíºËµÚÒ»¸ö²ÎÊı
-	int clean2 = 2; // ÇåÀíºËµÚ¶ş¸ö²ÎÊı
+    int line1 = 3; // å‚ç›´çº¿æ ¸ç¬¬ä¸€ä¸ªå‚æ•°
+    int line2 = 1; // å‚ç›´çº¿æ ¸ç¬¬äºŒä¸ªå‚æ•°
+    int clean1 = 1; // æ¸…ç†æ ¸ç¬¬ä¸€ä¸ªå‚æ•°
+	int clean2 = 2; // æ¸…ç†æ ¸ç¬¬äºŒä¸ªå‚æ•°
 
-    Mat kernel_line = getStructuringElement(MORPH_RECT, Size(Config::line1, Config::line2)); // ´¹Ö±ÏßºË
+    Mat kernel_line = getStructuringElement(MORPH_RECT, Size(Config::line1, Config::line2)); // å‚ç›´çº¿æ ¸
 
-    double MIN_LIGHT_RATIO = 0.01; // ×îĞ¡µÆÌõ³¤¿í±È
-    double MAX_LIGHT_RATIO = 20.0; // ×î´óµÆÌõ³¤¿í±È
-    double MAX_ANGLE_DIFF = 20.0f; // ÌõµÆ×î´ó½Ç¶ÈÆ«²î 
-    float MIN_LIGHT_AREA = 0.0f; // ÌõµÆ×îĞ¡Ãæ»ı
-    float MAX_LIGHT_AREA = 20000.0f; // ÌõµÆ×î´óÃæ»ı
-    float MAX_ARMOR_ANGLE_DIFF = 20.0f; // ×°¼×°å×î´ó½Ç¶È²î
-    float MAX_LENGTH_RATIO = 0.7f; // ×°¼×°å×î´ó³¤¶È±È²îÒì£¨Á½¸öÌõµÆµÄ³¤¶È±È£©
-    float MAX_DISPLACEMENT_ANGLE = 50.0f; // ×°¼×°å×î´ó´íÎ»½Ç£¨¶È£©
-    float MIN_ARMOR_ASPECT_RATIO = 1.5f; // ×îĞ¡×°¼×°å¿í¸ß±È
-    float MAX_ARMOR_ASPECT_RATIO = 30.0f; // ×î´ó×°¼×°å¿í¸ß±È
+    double MIN_LIGHT_RATIO = 0.01; // æœ€å°ç¯æ¡é•¿å®½æ¯”
+    double MAX_LIGHT_RATIO = 20.0; // æœ€å¤§ç¯æ¡é•¿å®½æ¯”
+    double MAX_ANGLE_DIFF = 20.0f; // æ¡ç¯æœ€å¤§è§’åº¦åå·® 
+    float MIN_LIGHT_AREA = 0.0f; // æ¡ç¯æœ€å°é¢ç§¯
+    float MAX_LIGHT_AREA = 20000.0f; // æ¡ç¯æœ€å¤§é¢ç§¯
+    float MAX_ARMOR_ANGLE_DIFF = 20.0f; // è£…ç”²æ¿æœ€å¤§è§’åº¦å·®
+    float MAX_LENGTH_RATIO = 0.7f; // è£…ç”²æ¿æœ€å¤§é•¿åº¦æ¯”å·®å¼‚ï¼ˆä¸¤ä¸ªæ¡ç¯çš„é•¿åº¦æ¯”ï¼‰
+    float MAX_DISPLACEMENT_ANGLE = 50.0f; // è£…ç”²æ¿æœ€å¤§é”™ä½è§’ï¼ˆåº¦ï¼‰
+    float MIN_ARMOR_ASPECT_RATIO = 1.5f; // æœ€å°è£…ç”²æ¿å®½é«˜æ¯”
+    float MAX_ARMOR_ASPECT_RATIO = 30.0f; // æœ€å¤§è£…ç”²æ¿å®½é«˜æ¯”
 
-    const char*const svm_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\svm_model3.xml"; // svmÄ£ĞÍÂ·¾¶
-	const char* const onnx_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\lenet5_armor_end.onnx"; // onnxÄ£ĞÍÂ·¾¶
+    const char*const svm_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\svm_model3.xml"; // svmæ¨¡å‹è·¯å¾„
+	const char* const onnx_path = "D:\\vsworkspaces\\ArmorNumClassifier_svm_model\\best1.onnx"; // onnxæ¨¡å‹è·¯å¾„
 
-    int bianry = 8; // ÊäÈëÄ£ĞÍµÄÍ¼Ïñ¶şÖµ»¯ãĞÖµ
-	int roi_x = 30; // ROIÇøÓòx·½Ïò
-	int roi_y = 45; // ROIÇøÓòy·½Ïò
-	int x_offset = 65; // x·½ÏòÆ«ÒÆ
-	int y_offset = 115; // y·½ÏòÆ«ÒÆ
+    int bianry = 1; // è¾“å…¥æ¨¡å‹çš„å›¾åƒäºŒå€¼åŒ–é˜ˆå€¼
+	int roi_x = 16; // ROIåŒºåŸŸxæ–¹å‘
+	int roi_y = 25; // ROIåŒºåŸŸyæ–¹å‘
+	int x_offset = 16; // xæ–¹å‘åç§»
+	int y_offset = 55; // yæ–¹å‘åç§»
 
-	// µ÷½ÚÆØ¹â
-    int gamma_val = 8; // ³õÊ¼Ù¤ÂíÖµ£¨x10£¬ÀıÈç1.8£©
-    int trunc_val = 220; // ³õÊ¼ÁÁ¶È½Ø¶ÏãĞÖµ
+	// è°ƒèŠ‚æ›å…‰
+    int gamma_val = 13; // åˆå§‹ä¼½é©¬å€¼ï¼ˆx10ï¼Œä¾‹å¦‚1.8ï¼‰
+    int trunc_val = 225; // åˆå§‹äº®åº¦æˆªæ–­é˜ˆå€¼
 
-    float warp_diff = 0.5; // Í¸ÊÓÆ«²î£¨°Ù·Ö±È£©
+    float warp_diff = 0.5; // é€è§†åå·®ï¼ˆç™¾åˆ†æ¯”ï¼‰
 
-    // ÎÈ¶¨»¯²ÎÊı³õÊ¼»¯
-    int STABILIZE_HISTORY_SIZE = 4;        // ÀúÊ·Ö¡Êı
-    float STABILIZE_WEIGHT = 0.7f;         // µ±Ç°Ö¡È¨ÖØ  
-    float MAX_POSITION_JUMP = 200.0f;       // ×î´óÎ»ÖÃÌøÔ¾
-    float MAX_SIZE_CHANGE = 0.1f;          // ×î´ó³ß´ç±ä»¯ÂÊ
+    // ç¨³å®šåŒ–å‚æ•°åˆå§‹åŒ–
+    int STABILIZE_HISTORY_SIZE = 4;        // å†å²å¸§æ•°
+    float STABILIZE_WEIGHT = 0.7f;         // å½“å‰å¸§æƒé‡  
+    float MAX_POSITION_JUMP = 200.0f;       // æœ€å¤§ä½ç½®è·³è·ƒ
+    float MAX_SIZE_CHANGE = 0.1f;          // æœ€å¤§å°ºå¯¸å˜åŒ–ç‡
 }
 
 VideoCapture cap;
    
 int main()
 {
-    cv::setUseOptimized(true);  // ÆôÓÃOpenCVÓÅ»¯
-    cv::setNumThreads(8);       // ÉèÖÃÏß³ÌÊıÎªCPUºËĞÄÊı
+    cv::setUseOptimized(true);  // å¯ç”¨OpenCVä¼˜åŒ–
+    cv::setNumThreads(8);       // è®¾ç½®çº¿ç¨‹æ•°ä¸ºCPUæ ¸å¿ƒæ•°
 
-    cap.open("D:\\Opencvpracticedata\\NumClasiifier.mp4"); // ¶ÁÈ¡ÊÓÆµÂ·¾¶
+    cap.open("D:\\Opencvpracticedata\\202510172048.mp4"); // è¯»å–è§†é¢‘è·¯å¾„
     
 
     Mat srcImg;
     if (!cap.read(srcImg))
     {
-        cout << "ÊÓÆµÓĞÎó£¡" << endl;
+        cout << "è§†é¢‘æœ‰è¯¯ï¼" << endl;
         return - 1;
     }
 
-	// ´´½¨´°¿ÚºÍ»¬¶¯Ìõ
+	// åˆ›å»ºçª—å£å’Œæ»‘åŠ¨æ¡
     namedWindow("trackbar", WINDOW_GUI_NORMAL);
     Trackbar(1, "trackbar");
 
-    int frameCount = 0; // »ñÈ¡µÄÖ¡Êı
-    int framecount = 0; // Ò»Ö±¼ÇÂ¼Ö¡Êı£¨Ö»ÊÇÓÃÓÚÔÚÆğÊ¼Ö¡Ê±½øĞĞselectROI£©
-    SimpleTimer fpsTimer; // ÓÃÓÚ¼ÆËãFPSµÄ¼ÆÊ±Æ÷
+    int frameCount = 0; // è·å–çš„å¸§æ•°
+    int framecount = 0; // ä¸€ç›´è®°å½•å¸§æ•°ï¼ˆåªæ˜¯ç”¨äºåœ¨èµ·å§‹å¸§æ—¶è¿›è¡ŒselectROIï¼‰
+    SimpleTimer fpsTimer; // ç”¨äºè®¡ç®—FPSçš„è®¡æ—¶å™¨
     fpsTimer.start();
-    double fps = 0.0f; // ´æ´¢¼ÆËãµÃµ½µÄFPS
-    string str = ""; // ÓÃÓÚÏÔÊ¾µÄ×Ö·û´®
+    double fps = 0.0f; // å­˜å‚¨è®¡ç®—å¾—åˆ°çš„FPS
+    string str = ""; // ç”¨äºæ˜¾ç¤ºçš„å­—ç¬¦ä¸²
 
-	ArmorDetected detector; // ÊµÀı»¯×°¼×°å¼ì²â¶ÔÏó
+	ArmorDetected detector; // å®ä¾‹åŒ–è£…ç”²æ¿æ£€æµ‹å¯¹è±¡
 
-	Rect l_light_roi; // ×ó²àµÆÌõROIÇøÓò
-	Rect r_light_roi; // ÓÒ²àµÆÌõROIÇøÓò
+	Rect l_light_roi; // å·¦ä¾§ç¯æ¡ROIåŒºåŸŸ
+	Rect r_light_roi; // å³ä¾§ç¯æ¡ROIåŒºåŸŸ
 
 	//resize(srcImg, srcImg, Size(Config::IMAGE_WIDTH, Config::IMAGE_HEIGHT));
     //srcImg = imread(img_path);
@@ -115,51 +115,51 @@ int main()
         }
 		Mat img = srcImg.clone();
         resize(img, img, Size(360, 640));
-        // ½µÆØ¹âÄ£Äâ£¨Ù¤Âí + ²ÃÁÁ£©
+        // é™æ›å…‰æ¨¡æ‹Ÿï¼ˆä¼½é©¬ + è£äº®ï¼‰
         srcImg.convertTo(img, CV_32F, 1.0 / 255.0);
-        cv::pow(img, Config::gamma_val, img); // gammaĞ£Õı
+        cv::pow(img, Config::gamma_val, img); // gammaæ ¡æ­£
         img.convertTo(img, CV_8U, 255.0);
-        // ÏŞÖÆ¸ßÁÁ
+        // é™åˆ¶é«˜äº®
         cv::threshold(img, img, Config::trunc_val, Config::trunc_val, cv::THRESH_TRUNC);
         
 
-        if (framecount == 0) // µÚ0Ö¡½øĞĞ³õÊ¼»¯
+        if (framecount == 0) // ç¬¬0å¸§è¿›è¡Œåˆå§‹åŒ–
         {
 			//resize(img, img, Size(540, 960));
-            // ÊÖ¶¯Ñ¡Ôñ×óÓÒµÆÌõÇøÓò
+            // æ‰‹åŠ¨é€‰æ‹©å·¦å³ç¯æ¡åŒºåŸŸ
             l_light_roi = selectROI("Select Left Light", img);
             r_light_roi = selectROI("Select Right Light", img);
 
-            // ½«ROI×ª»»ÎªBBox²¢³õÊ¼»¯last_lightBars
+            // å°†ROIè½¬æ¢ä¸ºBBoxå¹¶åˆå§‹åŒ–last_lightBars
             if (l_light_roi.width > 0 && r_light_roi.width > 0) 
             {
                 detector.initializeLastLightBars(l_light_roi, r_light_roi);
             }
         }
 
-		Mat debugImg = img.clone(); // ÓÃÓÚÏÔÊ¾Ê¶±ğµÄĞ§¹û
+		Mat debugImg = img.clone(); // ç”¨äºæ˜¾ç¤ºè¯†åˆ«çš„æ•ˆæœ
         
-        // ½øĞĞ×°¼×°åÊ¶±ğ
+        // è¿›è¡Œè£…ç”²æ¿è¯†åˆ«
         bool detected = detector.detectArmor(img);
 
         framecount++;
         frameCount++;
         double elapsed = fpsTimer.getElapsedMs();
         
-        // Ã¿Ãë¼ÆËãÒ»´ÎFPS
+        // æ¯ç§’è®¡ç®—ä¸€æ¬¡FPS
         if (elapsed >= 1000.0f)
         {
             fps = frameCount / (elapsed / 1000.0f);
             frameCount = 0;
             fpsTimer.start();
-            str = "FPS:" + to_string(fps); // ÓÃÓÚÊµÊ±ÏÔÊ¾FPS
+            str = "FPS:" + to_string(fps); // ç”¨äºå®æ—¶æ˜¾ç¤ºFPS
         }
         putText(debugImg, str, Point2f(100, 100), FONT_HERSHEY_SIMPLEX, 0.5, Config::COLOR_GREEN);
 
-		// Èç¹û¼ì²âµ½×°¼×°å
+		// å¦‚æœæ£€æµ‹åˆ°è£…ç”²æ¿
         if (detected)
         {
-            // ÏÔÊ¾
+            // æ˜¾ç¤º
             detector.showLightBars(debugImg);
             detector.showArmors(debugImg);
         }
