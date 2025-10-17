@@ -18,6 +18,7 @@ public:
 	void getArmorNumByONNX(ArmorBox& armor); // 识别装甲板数字（ONNX）
 private:
 	Size armorImgSize; // 输入图像尺寸
+	Size yoloInputSize; // YOLOv8输入尺寸
 	Mat warpPerspective_src; // 透视变换前的原图
 	Mat warpPerspective_dst; // 透视变换后的目标图
 	Mat warpPerspective_mat; // 透视变换矩阵
@@ -25,4 +26,9 @@ private:
 
 	dnn::Net onnx_net; // ONNX模型
 	bool use_onnx = false; // 是否使用ONNX模型
+
+	vector <string> class_names; // 类别名称映射 {"0", "1", "2", "3", "4", "5", "6", "7", "8"}
+	float confidence_threshold; // 置信度阈值
+
+	Mat preprocessForYOLO(const Mat& input_img); // YOLOv8分类预处理
 };
