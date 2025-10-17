@@ -18,7 +18,7 @@ public:
 	void getArmorNumByONNX(ArmorBox& armor); // 识别装甲板数字（ONNX）
 private:
 	Size armorImgSize; // 输入图像尺寸
-	Size yoloInputSize; // YOLOv8输入尺寸
+	Size yoloInputSize; // YOLOv11输入尺寸
 	Mat warpPerspective_src; // 透视变换前的原图
 	Mat warpPerspective_dst; // 透视变换后的目标图
 	Mat warpPerspective_mat; // 透视变换矩阵
