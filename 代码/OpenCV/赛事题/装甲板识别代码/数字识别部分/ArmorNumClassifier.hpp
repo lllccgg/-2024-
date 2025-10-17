@@ -13,16 +13,16 @@ class ArmorNumClassifier
 public:
 	ArmorNumClassifier();
 	~ArmorNumClassifier() = default;
-	bool getArmorImg(ArmorBox& armor, const Mat& srcImg); // »ñÈ¡×°¼×°åÍ¼Ïñ
-	void loadONNXModel(const char* model_path); // ¼ÓÔØONNXÄ£ĞÍ
-	void getArmorNumByONNX(ArmorBox& armor); // Ê¶±ğ×°¼×°åÊı×Ö£¨ONNX£©
+	bool getArmorImg(ArmorBox& armor, const Mat& srcImg); // è·å–è£…ç”²æ¿å›¾åƒ
+	void loadONNXModel(const char* model_path); // åŠ è½½ONNXæ¨¡å‹
+	void getArmorNumByONNX(ArmorBox& armor); // è¯†åˆ«è£…ç”²æ¿æ•°å­—ï¼ˆONNXï¼‰
 private:
-	Size armorImgSize; // SVMÊäÈëÍ¼Ïñ³ß´ç
-	Mat warpPerspective_src; // Í¸ÊÓ±ä»»Ç°µÄÔ­Í¼
-	Mat warpPerspective_dst; // Í¸ÊÓ±ä»»ºóµÄÄ¿±êÍ¼
-	Mat warpPerspective_mat; // Í¸ÊÓ±ä»»¾ØÕó
-	Point2f srcPoints[4]; // Í¸ÊÓ±ä»»Ô­Í¼µÄÄ¿±êµã£¨×óÉÏ ÓÒÉÏ ÓÒÏÂ ×óÏÂ£©
+	Size armorImgSize; // è¾“å…¥å›¾åƒå°ºå¯¸
+	Mat warpPerspective_src; // é€è§†å˜æ¢å‰çš„åŸå›¾
+	Mat warpPerspective_dst; // é€è§†å˜æ¢åçš„ç›®æ ‡å›¾
+	Mat warpPerspective_mat; // é€è§†å˜æ¢çŸ©é˜µ
+	Point2f srcPoints[4]; // é€è§†å˜æ¢åŸå›¾çš„ç›®æ ‡ç‚¹ï¼ˆå·¦ä¸Š å³ä¸Š å³ä¸‹ å·¦ä¸‹ï¼‰
 
-	dnn::Net onnx_net; // ONNXÄ£ĞÍ
-	bool use_onnx = false; // ÊÇ·ñÊ¹ÓÃONNXÄ£ĞÍ
+	dnn::Net onnx_net; // ONNXæ¨¡å‹
+	bool use_onnx = false; // æ˜¯å¦ä½¿ç”¨ONNXæ¨¡å‹
 };
