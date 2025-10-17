@@ -7,7 +7,7 @@ Mat preprocessROI(const Mat& roi_img, int target_size);
 
 ArmorNumClassifier::ArmorNumClassifier()
 {
-	armorImgSize = Size(32, 32); // 输入图像尺寸
+	armorImgSize = Size(128, 128); // 输入图像尺寸
 	yoloInputSize = Size(64, 64); // YOLOv8输入尺寸
 	use_onnx = false; // 是否加载ONNX模型
 	confidence_threshold = 0.4f; // 置信度阈值
