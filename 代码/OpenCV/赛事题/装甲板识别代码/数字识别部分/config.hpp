@@ -75,7 +75,6 @@ namespace Config {
     const double ARMOR_WIDTH = 145.0; // 装甲板宽度
     const double LIGHT_HEIGHT = 65.0; // 条灯高度
 
-    extern const char* const svm_path; // svm模型路径
 	extern const char* const onnx_path; // onnx模型路径
 
     extern int bianry; // 输入模型的图像二值化阈值
