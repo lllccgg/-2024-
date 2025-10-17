@@ -1,14 +1,17 @@
 #include "ArmorNumClassifier.hpp"
 
-// Í¸ÊÓ±ä»»¸¨Öúº¯Êı
+// é€è§†å˜æ¢è¾…åŠ©å‡½æ•°
 void WarpedImage(const cv::Mat& src, cv::Mat& dst, const cv::Point2f srcPoints[4], const cv::Size& dstSize);
-// ±£³Ö³¤¿í±ÈµÄÖÇÄÜÌî³äº¯Êı
+// ä¿æŒé•¿å®½æ¯”çš„æ™ºèƒ½å¡«å……å‡½æ•°
 Mat preprocessROI(const Mat& roi_img, int target_size);
 
 ArmorNumClassifier::ArmorNumClassifier()
 {
-	armorImgSize = Size(32, 32); // ÊäÈëÍ¼Ïñ³ß´ç
-	use_onnx = false; // ÊÇ·ñ¼ÓÔØONNXÄ£ĞÍ
+	armorImgSize = Size(32, 32); // è¾“å…¥å›¾åƒå°ºå¯¸
+	yoloInputSize = Size(64, 64); // YOLOv8è¾“å…¥å°ºå¯¸
+	use_onnx = false; // æ˜¯å¦åŠ è½½ONNXæ¨¡å‹
+	confidence_threshold = 0.4f; // ç½®ä¿¡åº¦é˜ˆå€¼
+	class_names = { "0", "1", "2", "3", "4", "5", "6", "7", "8" }; // åˆå§‹åŒ–ç±»åˆ«åç§°æ˜ å°„ï¼ˆ0-8æ•°å­—ï¼‰
 }
 
 void ArmorNumClassifier::loadONNXModel(const char* model_path)
@@ -20,15 +23,15 @@ void ArmorNumClassifier::loadONNXModel(const char* model_path)
 			onnx_net = dnn::readNetFromONNX(model_path);
 			if (onnx_net.empty())
 			{
-				cout << "ONNXÄ£ĞÍ¼ÓÔØÊ§°Ü!" << endl;
+				cout << "ONNXæ¨¡å‹åŠ è½½å¤±è´¥!" << endl;
 				exit(0);
 			}
-			// Ê¹ÓÃCPU
+			// ä½¿ç”¨CPU
 			onnx_net.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
 			onnx_net.setPreferableTarget(dnn::DNN_TARGET_CPU);
 			use_onnx = true;
-			cout << "ONNXÄ£ĞÍ¼ÓÔØ³É¹¦!" << endl;
-			//waitKey(0); // ²âÊÔ 
+			cout << "ONNXæ¨¡å‹åŠ è½½æˆåŠŸ!" << endl;
+			//waitKey(0); // æµ‹è¯• 
 		}
 		catch (const cv::Exception& e)
 		{
@@ -46,24 +49,24 @@ bool ArmorNumClassifier::getArmorImg(ArmorBox& armor, const Mat& srcImg)
 		std::cerr << "Error: src image is empty!" << std::endl;
 		return false;
 	}
-	// ¼ÆËãROIÇøÓòµÄ×ø±ê
+	// è®¡ç®—ROIåŒºåŸŸçš„åæ ‡
 	int x = max(0, (int)armor.vertices[0].x + Config::roi_x);
 	int y = max(0, (int)armor.vertices[0].y - Config::roi_y);
 	int width = min((int)armor.width - Config::x_offset, srcImg.cols - x);
-	int height = min((int)armor.height + Config::y_offset, srcImg.rows - y);
+	int height = min((int)armor.height + Config::y_offset, srcImg.rows + y);
 
-	// ¼ì²éROIÇøÓòÊÇ·ñÓĞĞ§
+	// æ£€æŸ¥ROIåŒºåŸŸæ˜¯å¦æœ‰æ•ˆ
 	if (width <= 0 || height <= 0) 
 	{
-		cout << "ROIÇøÓòµÄ¿í¶È»ò¸ß¶ÈÎŞĞ§: width=" << width << ", height=" << height << endl;
+		cout << "ROIåŒºåŸŸçš„å®½åº¦æˆ–é«˜åº¦æ— æ•ˆ: width=" << width << ", height=" << height << endl;
 		return false;
 	}
-	// Ìí¼Ó×îĞ¡³ß´çÒªÇó
-	const int MIN_ROI_SIZE = 5; // ×îĞ¡ROI³ß´ç
+	// æ·»åŠ æœ€å°å°ºå¯¸è¦æ±‚
+	const int MIN_ROI_SIZE = 5; // æœ€å°ROIå°ºå¯¸
 	if (width < MIN_ROI_SIZE || height < MIN_ROI_SIZE) 
 	{
-		cout << "ROIÇøÓòÌ«Ğ¡£¬ÎŞ·¨´¦Àí: width=" << width << ", height=" << height
-			<< " (×îĞ¡ÒªÇó: " << MIN_ROI_SIZE << ")" << endl;
+		cout << "ROIåŒºåŸŸå¤ªå°ï¼Œæ— æ³•å¤„ç†: width=" << width << ", height=" << height
+			<< " (æœ€å°è¦æ±‚: " << MIN_ROI_SIZE << ")" << endl;
 		armor.armorNum = -1;
 		return false;
 	}
@@ -72,14 +75,14 @@ bool ArmorNumClassifier::getArmorImg(ArmorBox& armor, const Mat& srcImg)
 		width  > srcImg.cols ||
 		height  > srcImg.rows) 
 	{
-		cout << "ROIÇøÓò³¬³öÁËÍ¼Ïñ±ß½ç" << endl;
-		armor.armorNum = -1; // ±ê¼ÇÎªÎŞĞ§×°¼×°å
+		cout << "ROIåŒºåŸŸè¶…å‡ºäº†å›¾åƒè¾¹ç•Œ" << endl;
+		armor.armorNum = -1; // æ ‡è®°ä¸ºæ— æ•ˆè£…ç”²æ¿
 		return false;
 	}
 
 	if (x + width > srcImg.cols || y + height > srcImg.rows) 
 	{
-		cout << "ROIÇøÓò³¬³öÍ¼Ïñ±ß½ç: x=" << x << ", y=" << y
+		cout << "ROIåŒºåŸŸè¶…å‡ºå›¾åƒè¾¹ç•Œ: x=" << x << ", y=" << y
 			<< ", width=" << width << ", height=" << height
 			<< ", img_cols=" << srcImg.cols << ", img_rows=" << srcImg.rows << endl;
 		armor.armorNum = -1;
@@ -87,22 +90,22 @@ bool ArmorNumClassifier::getArmorImg(ArmorBox& armor, const Mat& srcImg)
 	}
 
 	Mat roi;
-	roi = srcImg(Rect(x, y, width, height)); // ÌáÈ¡ROIÇøÓò
+	roi = srcImg(Rect(x, y, width, height)); // æå–ROIåŒºåŸŸ
 
-	// Ìí¼ÓROIÓĞĞ§ĞÔ¼ì²é
+	// æ·»åŠ ROIæœ‰æ•ˆæ€§æ£€æŸ¥
 	if (roi.empty() || roi.cols <= 0 || roi.rows <= 0) 
 	{
-		cout << "ÌáÈ¡µÄROIÇøÓòÎŞĞ§»òÎª¿Õ" << endl;
+		cout << "æå–çš„ROIåŒºåŸŸæ— æ•ˆæˆ–ä¸ºç©º" << endl;
 		armor.armorNum = -1;
 		return false;
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		srcPoints[i] = armor.vertices[i] ; // ×°¼×°å¶¥µã×ø±ê
+		srcPoints[i] = armor.vertices[i] ; // è£…ç”²æ¿é¡¶ç‚¹åæ ‡
 	}
 
-	warpPerspective_dst = preprocessROI(roi, 32); // ÖÇÄÜÌî³ä
+	warpPerspective_dst = preprocessROI(roi, 32); // æ™ºèƒ½å¡«å……
 
 	if (!warpPerspective_dst.empty() &&
 		warpPerspective_dst.cols > 0 &&
@@ -113,7 +116,7 @@ bool ArmorNumClassifier::getArmorImg(ArmorBox& armor, const Mat& srcImg)
 	}
 	else 
 	{
-		cout << "¾¯¸æ£º´¦ÀíºóµÄÍ¼ÏñÎŞĞ§£¬Ìø¹ıÏÔÊ¾" << endl;
+		cout << "è­¦å‘Šï¼šå¤„ç†åçš„å›¾åƒæ— æ•ˆï¼Œè·³è¿‡æ˜¾ç¤º" << endl;
 	}
 
 	namedWindow("Warped Image", WINDOW_GUI_NORMAL);
@@ -122,17 +125,61 @@ bool ArmorNumClassifier::getArmorImg(ArmorBox& armor, const Mat& srcImg)
 	return true;
 }
 
+Mat ArmorNumClassifier::preprocessForYOLO(const Mat& input_img)
+{
+	Mat processed_img;
+	// 1.è½¬æ¢ä¸ºç°åº¦å›¾
+	if (input_img.channels() == 3)
+	{
+		cvtColor(input_img, processed_img, COLOR_BGR2GRAY);
+	}
+	else
+	{
+		processed_img = input_img.clone();
+	}
+	// 2.ç¼©æ”¾åˆ°32X32
+	Mat resized_img;
+	if (processed_img.size() != armorImgSize)
+	{
+		resize(processed_img, resized_img, armorImgSize);
+	}
+	else
+	{
+		resized_img = processed_img;
+	}
+	// 3.OTSUäºŒå€¼åŒ–
+	Mat binary_img;
+	threshold(resized_img, binary_img, 0, 255, THRESH_BINARY_INV );
+	// 4.è½¬æ¢ä¸º3é€šé“
+	Mat threee_channel_img;
+	cvtColor(binary_img, threee_channel_img, COLOR_GRAY2BGR);
+	// 5.ç¼©æ”¾åˆ°YOLOv8è¾“å…¥å°ºå¯¸
+	Mat final_img;
+	if (threee_channel_img.size() != yoloInputSize)
+	{
+		resize(threee_channel_img, final_img, yoloInputSize);
+	}
+	else
+	{
+		final_img = threee_channel_img;
+	}
+	// æ˜¾ç¤ºé¢„å¤„ç†ç»“æœ
+	imshow("YOLO INPUT", final_img);
+
+	return final_img;
+}
+
 void ArmorNumClassifier::getArmorNumByONNX(ArmorBox& armor)
 {
-	// ¼ì²éÄ£ĞÍÊÇ·ñ¼ÓÔØ³É¹¦
+	// æ£€æŸ¥æ¨¡å‹æ˜¯å¦åŠ è½½æˆåŠŸ
 	if (!use_onnx) {
-		cout << "ONNXÄ£ĞÍÎ´¼ÓÔØ!" << endl;
+		cout << "ONNXæ¨¡å‹æœªåŠ è½½!" << endl;
 		return;
 	}
 
-	// 1. ¶ÔÌáÈ¡µÄROIÇøÓò½øĞĞÔ¤´¦Àí
-	Mat processedImg;
-	cvtColor(warpPerspective_dst, processedImg, COLOR_BGR2GRAY);
+	// 1. å¯¹æå–çš„ROIåŒºåŸŸè¿›è¡Œé¢„å¤„ç†
+	Mat processedImg = preprocessForYOLO(warpPerspective_dst);
+	//cvtColor(warpPerspective_dst, processedImg, COLOR_BGR2GRAY);
 
 	if (processedImg.empty() || processedImg.cols <= 0 || processedImg.rows <= 0) {
 		std::cerr << "Error: processedImg is invalid for resize!" << std::endl;
@@ -144,76 +191,63 @@ void ArmorNumClassifier::getArmorNumByONNX(ArmorBox& armor)
 		return;
 	}
 
-	// 2.¹æ·¶Í¼Ïñ´óĞ¡
-	Mat resized_img;
-	if (processedImg.size() != armorImgSize)
-	{
-		resize(processedImg, resized_img, armorImgSize);
-	}
-	else
-	{
-		resized_img = processedImg;
-	}
-	
-	// 3.¶ÔÍ¼Ïñ½øĞĞ¶şÖµ»¯
-	Mat binary;
-	threshold(resized_img, binary, Config::bianry, 255, THRESH_BINARY_INV);
-
-	// 4.ĞÎÌ¬Ñ§²Ù×÷
-	//Mat kernel = getStructuringElement(MORPH_RECT, Size(1, 2));
-	//morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-
-	namedWindow("ONNX Input", WINDOW_GUI_NORMAL);
-	imshow("ONNX Input", binary);
-	//waitKey(0);
-	
-	double maxval, minval;
-	Point maxloc, minloc;
-	minMaxLoc(binary, &minval, &maxval, &minloc, &maxloc);
-	//cout << "¹éÒ»»¯Ç°£º" << " minval=" << minval << ", maxval=" << maxval << endl;
-
-	// 7.¹éÒ»»¯
-	binary.convertTo(binary, CV_32F, 1.0 / 255.0);
-	
-	minMaxLoc(binary, &minval, &maxval, &minloc, &maxloc);
-	//cout << "¹éÒ»»¯ºó£º" << " minval=" << minval << ", maxval=" << maxval << endl;
-
-	// 8. ´´½¨4D blob
-	Mat blob = dnn::blobFromImage(binary, 1.0, armorImgSize, Scalar(0), false, false);
+	// 2. åˆ›å»º blob
+	Mat blob = dnn::blobFromImage(processedImg, 1.0 / 255.0, yoloInputSize, Scalar(0,0,0), true, false, CV_32F);
 	//cout << "N=" << blob.size[0] << ", C=" << blob.size[1] << ", H=" << blob.size[2] << ", W=" << blob.size[3] << endl;
 
-	// 9.ÉèÖÃÍøÂçÊäÈë
+	// 3.è®¾ç½®ç½‘ç»œè¾“å…¥
 	onnx_net.setInput(blob);
 
-	// 10.Ç°Ïò´«²¥£¬»ñÈ¡Êä³ö
+	// 4.å‰å‘ä¼ æ’­ï¼Œè·å–è¾“å‡º
 	Mat output = onnx_net.forward();
 
+	// 5. è§£æYOLOv8åˆ†ç±»è¾“å‡º
+	// YOLOv8åˆ†ç±»è¾“å‡ºå½¢çŠ¶ä¸º [1, num_classes]ï¼Œå³ [1, 9]
+	if (output.rows != 1 || output.cols != class_names.size()) {
+		std::cerr << "Error: YOLOv8è¾“å‡ºç»´åº¦ä¸åŒ¹é…! æœŸæœ›: [1, " << class_names.size()
+			<< "], å®é™…: [" << output.rows << ", " << output.cols << "]" << std::endl;
+		armor.armorNum = -1;
+		return;
+	}
 
-
-	// 11. »ñÈ¡Ô¤²â½á¹û
+	// 6.æ‰¾åˆ°æœ€å¤§æ¦‚ç‡çš„ç±»åˆ«
 	Point classIdPoint;
-	double confidence;
-	minMaxLoc(output, nullptr, &confidence, nullptr, &classIdPoint);
-	armor.armorNum = classIdPoint.x; // Àà±ğË÷Òı¼´ÎªÔ¤²âµÄÊı×Ö
+	double max_confidence;
+	minMaxLoc(output, nullptr, &max_confidence, nullptr, &classIdPoint);
+	int predicted_class = classIdPoint.x; // é¢„æµ‹çš„ç±»åˆ«ç´¢å¼•
+
+	// 7.æ£€æŸ¥ç½®ä¿¡åº¦é˜ˆå€¼
+	if (max_confidence < confidence_threshold)
+	{
+		cout << "YOLOv8åˆ†ç±»ç½®ä¿¡åº¦è¿‡ä½: " << max_confidence
+			<< " < " << confidence_threshold << endl;
+		armor.armorNum = 0; // ç½®ä¿¡åº¦ä¸è¶³ï¼Œæ ‡è®°ä¸ºæ— æ•ˆ
+		return;
+	}
+	
+	// 8.è¾“å‡ºè¯†åˆ«ç»“æœ
+	armor.armorNum = predicted_class; // ç±»åˆ«ç´¢å¼•å³ä¸ºè¯†åˆ«çš„æ•°å­—
+	cout << "YOLOv8è¯†åˆ«ç»“æœ: æ•°å­—=" << predicted_class
+		<< " (" << class_names[predicted_class] << ")"
+		<< ", ç½®ä¿¡åº¦=" << max_confidence << endl;
 }
 
-// Í¸ÊÓ±ä»»¸¨Öúº¯Êı
+// é€è§†å˜æ¢è¾…åŠ©å‡½æ•°
 void WarpedImage(const cv::Mat& src, cv::Mat& dst, const cv::Point2f srcPoints[4], const cv::Size& dstSize)
 {
 	CV_Assert(!src.empty());
-	//std::cout << "Ô­Í¼´óĞ¡: " << src.cols << "x" << src.rows << "  ÀàĞÍ: " << src.type() << std::endl;
+	//std::cout << "åŸå›¾å¤§å°: " << src.cols << "x" << src.rows << "  ç±»å‹: " << src.type() << std::endl;
 
-	// ²»ĞŞ¸ÄÔ­Í¼£ºÉú³É¸¡µã¸±±¾
+	// ä¸ä¿®æ”¹åŸå›¾ï¼šç”Ÿæˆæµ®ç‚¹å‰¯æœ¬
 	cv::Mat src_float;
 	src.convertTo(src_float, CV_32FC3, 1.0 / 255.0);
 
-	// ´òÓ¡ÊäÈë½Çµã
+	// æ‰“å°è¾“å…¥è§’ç‚¹
 	//std::cout << "srcPoints:\n";
 	//for (int i = 0; i < 4; ++i)
 	//	std::cout << i << ": " << srcPoints[i] << std::endl;
 
-	// ¼ÆËãÍ¸ÊÓ±ä»»¾ØÕó
+	// è®¡ç®—é€è§†å˜æ¢çŸ©é˜µ
 	cv::Point2f dstPoints[4] = {
 		{0, 0},
 		{(float)dstSize.width - 1, 0},
@@ -223,24 +257,24 @@ void WarpedImage(const cv::Mat& src, cv::Mat& dst, const cv::Point2f srcPoints[4
 
 	cv::Mat M = cv::getPerspectiveTransform(srcPoints, dstPoints);
 
-	//std::cout << "±ä»»¾ØÕó M:\n" << M << std::endl;
+	//std::cout << "å˜æ¢çŸ©é˜µ M:\n" << M << std::endl;
 
-	// Ö´ĞĞÍ¸ÊÓ±ä»»
+	// æ‰§è¡Œé€è§†å˜æ¢
 	cv::warpPerspective(src_float, dst, M, dstSize, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
-	// ¼ì²éÊä³ö·¶Î§
+	// æ£€æŸ¥è¾“å‡ºèŒƒå›´
 	double minVal, maxVal;
 	cv::minMaxLoc(dst.reshape(1), &minVal, &maxVal);
-	//std::cout << "warp½á¹û·¶Î§: " << minVal << " ~ " << maxVal << std::endl;
+	//std::cout << "warpç»“æœèŒƒå›´: " << minVal << " ~ " << maxVal << std::endl;
 
-	// ³Ë»Ø255²¢×ªÎª8Î»ÏÔÊ¾
+	// ä¹˜å›255å¹¶è½¬ä¸º8ä½æ˜¾ç¤º
 	dst.convertTo(dst, CV_8UC3, 255.0);
 
 	cv::imshow("warp result", dst);
 	//cv::waitKey(0);
 }
 
-// ±£³Ö³¤¿í±ÈµÄÖÇÄÜÌî³äº¯Êı
+// ä¿æŒé•¿å®½æ¯”çš„æ™ºèƒ½å¡«å……å‡½æ•°
 Mat preprocessROI(const Mat& roi_img, int target_size = 32)
 {
 	if (roi_img.empty()) {
@@ -257,7 +291,7 @@ Mat preprocessROI(const Mat& roi_img, int target_size = 32)
 		return Mat();
 	}
 
-	// 1.¼ÆËãËõ·Å±ÈÀı£¬±£³Ö³¤¿í±È
+	// 1.è®¡ç®—ç¼©æ”¾æ¯”ä¾‹ï¼Œä¿æŒé•¿å®½æ¯”
 	double scale = min((double)target_size / roi_img.cols, (double)target_size / roi_img.rows);
 	
 	if (scale <= 0 || !isfinite(scale)) {
@@ -265,20 +299,20 @@ Mat preprocessROI(const Mat& roi_img, int target_size = 32)
 		return Mat();
 	}
 
-	// 2.°´±ÈÀıËõ·Å
+	// 2.æŒ‰æ¯”ä¾‹ç¼©æ”¾
 	int new_width = int(roi_img.cols * scale);
 	int new_height = int(roi_img.rows * scale);
 
-	// È·±£×îĞ¡³ß´çÎª1ÏñËØ
+	// ç¡®ä¿æœ€å°å°ºå¯¸ä¸º1åƒç´ 
 	new_width = max(1, new_width);
 	new_height = max(1, new_height);
 
-	// Ìí¼Óµ÷ÊÔĞÅÏ¢
-	//std::cout << "ROIÔ­Ê¼³ß´ç: " << roi_img.cols << "x" << roi_img.rows
-	//	<< ", Ëõ·Å±ÈÀı: " << scale
-	//	<< ", ĞÂ³ß´ç: " << new_width << "x" << new_height << std::endl;
+	// æ·»åŠ è°ƒè¯•ä¿¡æ¯
+	//std::cout << "ROIåŸå§‹å°ºå¯¸: " << roi_img.cols << "x" << roi_img.rows
+	//	<< ", ç¼©æ”¾æ¯”ä¾‹: " << scale
+	//	<< ", æ–°å°ºå¯¸: " << new_width << "x" << new_height << std::endl;
 
-	// Ìí¼Ó³ß´ç¼ì²é
+	// æ·»åŠ å°ºå¯¸æ£€æŸ¥
 	if (new_width <= 0 || new_height <= 0) {
 		std::cerr << "Error: calculated new dimensions invalid! new_width="
 			<< new_width << ", new_height=" << new_height << std::endl;
@@ -287,12 +321,12 @@ Mat preprocessROI(const Mat& roi_img, int target_size = 32)
 
 	Mat resized;
 	resize(roi_img, resized, Size(new_width, new_height));
-	// 3.´´½¨Ä¿±ê´óĞ¡µÄºÚÉ«±³¾°
+	// 3.åˆ›å»ºç›®æ ‡å¤§å°çš„é»‘è‰²èƒŒæ™¯
 	Mat result = Mat::zeros(Size(target_size, target_size), roi_img.type());
-	// 4.¼ÆËãÆ«ÒÆÁ¿£¬¾ÓÖĞ·ÅÖÃ
+	// 4.è®¡ç®—åç§»é‡ï¼Œå±…ä¸­æ”¾ç½®
 	int x_offset = (target_size - new_width) / 2;
 	int y_offset = (target_size - new_height) / 2;
-	// 5.½«Ëõ·ÅºóµÄÍ¼Ïñ¸´ÖÆµ½±³¾°ÖĞ¼ä
+	// 5.å°†ç¼©æ”¾åçš„å›¾åƒå¤åˆ¶åˆ°èƒŒæ™¯ä¸­é—´
 	Rect roi_rect(x_offset, y_offset, new_width, new_height);
 	resized.copyTo(result(roi_rect));
 	return result;
