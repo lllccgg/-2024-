@@ -8,7 +8,7 @@ Mat preprocessROI(const Mat& roi_img, int target_size);
 ArmorNumClassifier::ArmorNumClassifier()
 {
 	armorImgSize = Size(128, 128); // 输入图像尺寸
-	yoloInputSize = Size(64, 64); // YOLOv8输入尺寸
+	yoloInputSize = Size(64, 64); // YOLO输入尺寸
 	use_onnx = false; // 是否加载ONNX模型
 	confidence_threshold = 0.4f; // 置信度阈值
 	class_names = { "0", "1", "2", "3", "4", "5", "6", "7", "8" }; // 初始化类别名称映射（0-8数字）
