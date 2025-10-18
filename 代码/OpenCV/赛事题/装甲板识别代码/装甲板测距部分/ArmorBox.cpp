@@ -4,7 +4,7 @@
 
 ArmorBox::ArmorBox(const LightBar& light1, const LightBar& light2)
 {
-	// ¸ù¾İx×ø±êÈ·¶¨×óÓÒ²àµÄÌõµÆ
+	// æ ¹æ®xåæ ‡ç¡®å®šå·¦å³ä¾§çš„æ¡ç¯
 	if (light1.center.x < light2.center.x)
 	{
 		leftlight = light1;
@@ -15,53 +15,53 @@ ArmorBox::ArmorBox(const LightBar& light1, const LightBar& light2)
 		leftlight = light2;
 		rightlight = light1;
 	}
-	// ¼ÆËã×°¼×°å¼¸ºÎ²ÎÊı
+	// è®¡ç®—è£…ç”²æ¿å‡ ä½•å‚æ•°
 	calculateCenter();
 	calculateGeometry();
-	rotatedrect = RotatedRect(center, Size2f(Config::ARMOR_WIDTH, Config::LIGHT_HEIGHT), angle);
+	rotatedrect = RotatedRect(center, Size2f(width, height), angle);
 }
 
 void ArmorBox::calculateCenter()
 {
-	// ×°¼×°åµÄÖĞĞÄÎªÁ½¸öÌõµÆÖĞĞÄµÄÖĞµã
+	// è£…ç”²æ¿çš„ä¸­å¿ƒä¸ºä¸¤ä¸ªæ¡ç¯ä¸­å¿ƒçš„ä¸­ç‚¹
 	center.x = (leftlight.center.x + rightlight.center.x) / 2.0f;
 	center.y = (leftlight.center.y + rightlight.center.y) / 2.0f;
 }
 
 void ArmorBox::calculateGeometry()
 {
-	// ¼ÆËã×°¼×°å¿í¶È£¨Á½¸öÌõµÆÖĞĞÄµãÖ®¼äµÄ¾àÀë£©
+	// è®¡ç®—è£…ç”²æ¿å®½åº¦ï¼ˆä¸¤ä¸ªæ¡ç¯ä¸­å¿ƒç‚¹ä¹‹é—´çš„è·ç¦»ï¼‰
 	width = sqrt(pow(leftlight.center.x - rightlight.center.x, 2) + pow(leftlight.center.y - rightlight.center.y, 2));
-	// ×°¼×°å¸ß¶ÈÈ¡Á½¸öÌõµÆ³¤¶ÈµÄÆ½¾ùÖµ
+	// è£…ç”²æ¿é«˜åº¦å–ä¸¤ä¸ªæ¡ç¯é•¿åº¦çš„å¹³å‡å€¼
 	height = (leftlight.length + rightlight.length) / 2.0f;
-	// ×°¼×°å½Ç¶ÈÎªÁ½¸öÌõµÆ½Ç¶ÈµÄÆ½¾ùÖµ
+	// è£…ç”²æ¿è§’åº¦ä¸ºä¸¤ä¸ªæ¡ç¯è§’åº¦çš„å¹³å‡å€¼
 	angle = (leftlight.angle + rightlight.angle) / 2.0f;
-	// ¼ÆËã×°¼×°åµÄËÄ¸ö¶¥µã
+	// è®¡ç®—è£…ç”²æ¿çš„å››ä¸ªé¡¶ç‚¹
 	vertices.resize(4);
-	// »ùÓÚÖĞĞÄµãºÍ³ß´çÀ´¼ÆËã¶¥µã£¨ÒÔÖĞĞÄµãÎªÔ­µã£©
+	// åŸºäºä¸­å¿ƒç‚¹å’Œå°ºå¯¸æ¥è®¡ç®—é¡¶ç‚¹ï¼ˆä»¥ä¸­å¿ƒç‚¹ä¸ºåŸç‚¹ï¼‰
 	float halfwidth = width / 2.0f;
 	float halfheight = height / 2.0f;
-	// ¿¼ÂÇ½Ç¶ÈĞı×ª
+	// è€ƒè™‘è§’åº¦æ—‹è½¬
 	float cosAngle = cos(angle / 180.0f * CV_PI);
 	float sinAngle = sin(angle / 180.0f * CV_PI);
-	vertices[0] = Point2f(center.x - halfwidth * cosAngle + halfheight * sinAngle, center.y - halfheight * cosAngle - halfwidth * sinAngle); // ×óÉÏ¶¥µã
-	vertices[1] = Point2f(center.x + halfwidth * cosAngle + halfheight * sinAngle, center.y - halfheight * cosAngle + halfwidth * sinAngle); // ÓÒÉÏ¶¥µã
-	vertices[2] = Point2f(center.x + halfwidth * cosAngle - halfheight * sinAngle, center.y + halfwidth * sinAngle + halfheight * cosAngle); // ÓÒÏÂ¶¥µã
-	vertices[3] = Point2f(center.x - halfwidth * cosAngle - halfheight * sinAngle, center.y - halfwidth * sinAngle + halfheight * cosAngle); // ×óÏÂ¶¥µã
+	vertices[0] = Point2f(center.x - halfwidth * cosAngle + halfheight * sinAngle, center.y - halfheight * cosAngle - halfwidth * sinAngle); // å·¦ä¸Šé¡¶ç‚¹
+	vertices[1] = Point2f(center.x + halfwidth * cosAngle + halfheight * sinAngle, center.y - halfheight * cosAngle + halfwidth * sinAngle); // å³ä¸Šé¡¶ç‚¹
+	vertices[2] = Point2f(center.x + halfwidth * cosAngle - halfheight * sinAngle, center.y + halfwidth * sinAngle + halfheight * cosAngle); // å³ä¸‹é¡¶ç‚¹
+	vertices[3] = Point2f(center.x - halfwidth * cosAngle - halfheight * sinAngle, center.y - halfwidth * sinAngle + halfheight * cosAngle); // å·¦ä¸‹é¡¶ç‚¹
 }
 
 bool ArmorBox::isSuitableArmor() const
 {
-	// 1.½Ç¶È²î¼ì²â
+	// 1.è§’åº¦å·®æ£€æµ‹
 	float angleDiff = calculateAngleDiff();
 	if (angleDiff > Config::MAX_ARMOR_ANGLE_DIFF) return false;
-	// 2.³¤¶È±È¼ì²é£¨Á½¸öÌõµÆµÄ³¤¶È±È£©
+	// 2.é•¿åº¦æ¯”æ£€æŸ¥ï¼ˆä¸¤ä¸ªæ¡ç¯çš„é•¿åº¦æ¯”ï¼‰
 	float lengthRatio = calculateLengthRatio();
 	if (lengthRatio > Config::MAX_LENGTH_RATIO) return false;
-	// 3.´íÎ»½Ç¼ì²é
+	// 3.é”™ä½è§’æ£€æŸ¥
 	float displacementAngle = getDeviationAngle();
 	if (displacementAngle > Config::MAX_DISPLACEMENT_ANGLE) return false;
-	// 4.¿í¸ß±È¼ì²é£¨×°¼×°åÊÇºáÏòµÄ£©
+	// 4.å®½é«˜æ¯”æ£€æŸ¥ï¼ˆè£…ç”²æ¿æ˜¯æ¨ªå‘çš„ï¼‰
 	float aspectRatio = width / height;
 	if (aspectRatio < Config::MIN_ARMOR_ASPECT_RATIO || aspectRatio > Config::MAX_ARMOR_ASPECT_RATIO) return false;
 
@@ -71,7 +71,7 @@ bool ArmorBox::isSuitableArmor() const
 float ArmorBox::calculateAngleDiff() const
 {
 	float diff = abs(leftlight.angle - rightlight.angle);
-	// ´¦Àí½Ç¶È¿çÔ½0¶ÈµÄÇé¿ö
+	// å¤„ç†è§’åº¦è·¨è¶Š0åº¦çš„æƒ…å†µ
 	if (diff > 90) diff = 180 - diff;
 	return diff;
 }
@@ -85,7 +85,7 @@ float ArmorBox::calculateLengthRatio() const
 
 float ArmorBox::getDeviationAngle() const
 {
-	// ¼ÆËãÁ½¸öÌõµÆÖĞĞÄÁ¬ÏßÓëË®Æ½ÏßµÄ¼Ğ½Ç
+	// è®¡ç®—ä¸¤ä¸ªæ¡ç¯ä¸­å¿ƒè¿çº¿ä¸æ°´å¹³çº¿çš„å¤¹è§’
 	double dx = leftlight.center.x - rightlight.center.x;
 	double dy = leftlight.center.y - rightlight.center.y;
 	float angle = atan2(abs(dy), abs(dx)) * 180.0f / CV_PI;
@@ -103,31 +103,31 @@ void ArmorBox::getVertices(Point2f vertices[4]) const
 vector<Point2f> ArmorBox::getCornerPoints()
 {
 	vector<Point2f> corners;
-	rotatedrect.points(corners); // »ñÈ¡×°¼×°åËÄ¸ö½Çµã
-	vector<Point2f> orderedcorners; // ÓÃÓÚÅÅĞòºóµÄ½Çµã
-	Point2f topLeft, topRight, buttomRight, buttomLeft; // ËÄ¸öÅÅÁĞºóµÄ½Çµã
+	rotatedrect.points(corners); // è·å–è£…ç”²æ¿å››ä¸ªè§’ç‚¹
+	vector<Point2f> orderedcorners; // ç”¨äºæ’åºåçš„è§’ç‚¹
+	Point2f topLeft, topRight, buttomRight, buttomLeft; // å››ä¸ªæ’åˆ—åçš„è§’ç‚¹
 	for (const auto& corner : corners)
 	{
 		if (corner.x <= center.x && corner.y <= center.y)
 		{
-			topLeft = corner; // ×óÉÏ
-			cout << "×óÉÏ½Çµã" << corner << endl;
+			topLeft = corner; // å·¦ä¸Š
+			cout << "å·¦ä¸Šè§’ç‚¹" << corner << endl;
 
 		}
 		else if (corner.x > center.x && corner.y < center.y)
 		{
-			topRight = corner; // ÓÒÉÏ
-			cout << "ÓÒÉÏ½Çµã" << corner << endl;
+			topRight = corner; // å³ä¸Š
+			cout << "å³ä¸Šè§’ç‚¹" << corner << endl;
 		}
 		else if (corner.x > center.x && corner.y > center.y)
 		{
-			buttomRight = corner; // ÓÒÏÂ
-			cout << "ÓÒÏÂ½Çµã" << corner << endl;
+			buttomRight = corner; // å³ä¸‹
+			cout << "å³ä¸‹è§’ç‚¹" << corner << endl;
 		}
 		else if (corner.x < center.x && corner.y > center.y)
 		{
-			buttomLeft = corner; // ×óÏÂ
-			cout << "×óÏÂ½Çµã" << corner << endl;
+			buttomLeft = corner; // å·¦ä¸‹
+			cout << "å·¦ä¸‹è§’ç‚¹" << corner << endl;
 		}
 	}
 	orderedcorners.push_back(topLeft);
@@ -140,37 +140,37 @@ vector<Point2f> ArmorBox::getCornerPoints()
 	cout << orderedcorners[2] << endl;
 	cout << orderedcorners[3] << endl;
 
-	cout << "×óÉÏ½Çµã" << topLeft << endl;
-	cout << "ÓÒÉÏ½Çµã" << topRight << endl;
-	cout << "ÓÒÏÂ½Çµã" << buttomRight << endl;
-	cout << "×óÏÂ½Çµã" << buttomLeft << endl;
+	cout << "å·¦ä¸Šè§’ç‚¹" << topLeft << endl;
+	cout << "å³ä¸Šè§’ç‚¹" << topRight << endl;
+	cout << "å³ä¸‹è§’ç‚¹" << buttomRight << endl;
+	cout << "å·¦ä¸‹è§’ç‚¹" << buttomLeft << endl;
 
 	return orderedcorners;
 }
 
 bool ArmorBox::solvePnP(const Mat& caremaMatrix, const Mat& distCoeffs)
 {
-	// ×°¼×°åÈıÎ¬Í¼Ïñ×ø±ê£¨ÒÔ×°¼×°åÖĞĞÄÎªÔ­µã£©
+	// è£…ç”²æ¿ä¸‰ç»´å›¾åƒåæ ‡ï¼ˆä»¥è£…ç”²æ¿ä¸­å¿ƒä¸ºåŸç‚¹ï¼‰
 	vector<Point3f> objPoints;
-	objPoints.push_back(Point3f(-Config::ARMOR_WIDTH / 2.0, -Config::LIGHT_HEIGHT / 2.0, 0.0)); // ×óÉÏ
-	objPoints.push_back(Point3f(Config::ARMOR_WIDTH / 2.0, -Config::LIGHT_HEIGHT / 2.0, 0.0)); // ÓÒÉÏ
-	objPoints.push_back(Point3f(Config::ARMOR_WIDTH / 2.0, Config::LIGHT_HEIGHT / 2.0, 0.0)); // ÓÒÏÂ
-	objPoints.push_back(Point3f(-Config::ARMOR_WIDTH / 2.0, Config::LIGHT_HEIGHT / 2.0, 0.0)); // ×óÏÂ
-	// ×°¼×°å¶şÎ¬Í¼Ïñ×ø±ê
+	objPoints.push_back(Point3f(-Config::ARMOR_WIDTH / 2.0, -Config::LIGHT_HEIGHT / 2.0, 0.0)); // å·¦ä¸Š
+	objPoints.push_back(Point3f(Config::ARMOR_WIDTH / 2.0, -Config::LIGHT_HEIGHT / 2.0, 0.0)); // å³ä¸Š
+	objPoints.push_back(Point3f(Config::ARMOR_WIDTH / 2.0, Config::LIGHT_HEIGHT / 2.0, 0.0)); // å³ä¸‹
+	objPoints.push_back(Point3f(-Config::ARMOR_WIDTH / 2.0, Config::LIGHT_HEIGHT / 2.0, 0.0)); // å·¦ä¸‹
+	// è£…ç”²æ¿äºŒç»´å›¾åƒåæ ‡
 	vector<Point2f> imgPoints = getCornerPoints();
 
 
-	// Ê¹ÓÃPnPËã·¨½øĞĞ½âËã
+	// ä½¿ç”¨PnPç®—æ³•è¿›è¡Œè§£ç®—
 	bool success = cv::solvePnP(objPoints, imgPoints, caremaMatrix, distCoeffs, rvec, tvec);
 	if (success)
 	{
 		cout << "tvec[0]:" << tvec[0] << endl;
 		cout << "tvec[1]:" << tvec[1] << endl;
 		cout << "tvec[2]:" << tvec[2] << endl;
-		// ¾àÀë¾ÍÊÇÆ½ÒÆÏòÁ¿µÄÄ£³¤
+		// è·ç¦»å°±æ˜¯å¹³ç§»å‘é‡çš„æ¨¡é•¿
 		//distance = norm(tvec);
 		distance = tvec[2];
-		// Æ«º½½Ç¡¢¸©Ñö½ÇºÍ·­¹ö½Ç£¨rvec±äÎªĞı×ª¾ØÕórmat£¬ÔÙÓÃ·´Èı½Çº¯Êı½âËã£©
+		// åèˆªè§’ã€ä¿¯ä»°è§’å’Œç¿»æ»šè§’ï¼ˆrvecå˜ä¸ºæ—‹è½¬çŸ©é˜µrmatï¼Œå†ç”¨åä¸‰è§’å‡½æ•°è§£ç®—ï¼‰
 		//Mat rmat;
 		//Rodrigues(rvec, rmat);
 		//yaw_angle = atan2(rmat.at<double>(0, 2), rmat.at<double>(2, 2)) * 57.3;
@@ -191,7 +191,7 @@ bool ArmorBox::solvePnP(const Mat& caremaMatrix, const Mat& distCoeffs)
 
 void ArmorBox::draw(Mat& img, const Scalar& color) const
 {
-	// ÏÔÊ¾¾àÀëºÍ½Ç¶È
+	// æ˜¾ç¤ºè·ç¦»å’Œè§’åº¦
 	if (distance > 0)
 	{
 		string distText = "distance:" + to_string(distance);
