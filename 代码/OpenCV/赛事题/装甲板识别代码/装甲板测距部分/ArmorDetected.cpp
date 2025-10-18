@@ -1,7 +1,7 @@
 #include "ArmorDetected.hpp"
 
 
-void eraseErrorRepeatArmor(vector<ArmorBox>& armors); // ÓÃÓÚÉ¾³ıÓÎÀëµÆÌõµ¼ÖÂµÄ´íÎó×°¼×°å
+void eraseErrorRepeatArmor(vector<ArmorBox>& armors); // ç”¨äºåˆ é™¤æ¸¸ç¦»ç¯æ¡å¯¼è‡´çš„é”™è¯¯è£…ç”²æ¿
 
 //ArmorDetected::ArmorDetected() : stabilizer_initialized(false) 
 //{
@@ -14,14 +14,16 @@ void ArmorDetected::preprocessImage(const Mat& src)
 	Mat hsv;
 	Mat blueChannel;
 
-	// 1.1 HSV¿Õ¼äµÄÑÕÉ«ÌáÈ¡
+	// 1.1 HSVç©ºé—´çš„é¢œè‰²æå–
 	cvtColor(srcImg, hsv, COLOR_BGR2HSV);
-	inRange(hsv, Config::lower_blue, Config::upper_blue, blueChannel);
+	Scalar lower(Config::h_low, Config::s_low, Config::v_low);
+	Scalar upper(Config::h_high, Config::s_high, Config::v_high);
+	inRange(hsv, lower, upper, blueChannel);
 
-	// 2.¶şÖµ»¯´¦Àí
+	// 2.äºŒå€¼åŒ–å¤„ç†
 	threshold(blueChannel, binaryImg, Config::BINARY_THRESHOLD, 255, THRESH_BINARY);
 
-	// 3.ĞÎÌ¬Ñ§²Ù×÷È¥Ôë
+	// 3.å½¢æ€å­¦æ“ä½œå»å™ª
 	morphologyEx(binaryImg, binaryImg, MORPH_CLOSE, Config::kernel_line); 
 
 	namedWindow("binary", WINDOW_GUI_NORMAL);
@@ -30,23 +32,23 @@ void ArmorDetected::preprocessImage(const Mat& src)
 
 void ArmorDetected::findLightBars()
 {
-	// Çå³ıÉÏÒ»´Î¼ì²âµ½µÄÌõµÆ
+	// æ¸…é™¤ä¸Šä¸€æ¬¡æ£€æµ‹åˆ°çš„æ¡ç¯
 	lightBars.clear();
 
-	// Èç¹ûÎ´³õÊ¼»¯ÆğÊ¼Ö¡µÄÌõµÆ£¬Ê¹ÓÃ´«Í³¼ì²â·½·¨
+	// å¦‚æœæœªåˆå§‹åŒ–èµ·å§‹å¸§çš„æ¡ç¯ï¼Œä½¿ç”¨ä¼ ç»Ÿæ£€æµ‹æ–¹æ³•
 	if (!isInitialized || last_lightBars.size() < 2)
 	{
-		findLightBarsTraditional(); // ´«Í³ÂÖÀª¼ì²â
+		findLightBarsTraditional(); // ä¼ ç»Ÿè½®å»“æ£€æµ‹
 		return;
 	}
-	// 1.Ê¹ÓÃCIOU·½·¨»ùÓÚÉÏÒ»Ö¡µÄÌõµÆÎ»ÖÃ½øĞĞ¼ì²â
+	// 1.ä½¿ç”¨CIOUæ–¹æ³•åŸºäºä¸Šä¸€å¸§çš„æ¡ç¯ä½ç½®è¿›è¡Œæ£€æµ‹
 	vector<BBox> candidateBoxes;
 	vector<vector<Point>> contours;
 	findContours(binaryImg, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
 	for (const auto& contour : contours)
 	{
-		// 2.Ãæ»ıºÍµãÊıÉ¸Ñ¡
+		// 2.é¢ç§¯å’Œç‚¹æ•°ç­›é€‰
 		if (contourArea(contour) < Config::MIN_LIGHT_AREA ||
 			contourArea(contour) > Config::MAX_LIGHT_AREA ||
 			contour.size() < 6) continue;
@@ -60,14 +62,14 @@ void ArmorDetected::findLightBars()
 			candidateBoxes.push_back(candidateBox);
 		}
 	}
-	// 3.»ùÓÚCIOUµÄ×îÓÅÆ¥Åä
+	// 3.åŸºäºCIOUçš„æœ€ä¼˜åŒ¹é…
 	MatchResult leftMatch = findBestMatch(candidateBoxes, last_lightBars[0]);
 	MatchResult rightMatch = findBestMatch(candidateBoxes, last_lightBars[1]);
-	// ±ÜÃâÖØ¸´Æ¥ÅäÍ¬Ò»¸öºòÑ¡¿ò
+	// é¿å…é‡å¤åŒ¹é…åŒä¸€ä¸ªå€™é€‰æ¡†
 	if (leftMatch.isValid && rightMatch.isValid &&
 		leftMatch.candidateIndex == rightMatch.candidateIndex)
 	{
-		// Ñ¡ÔñCIOU¸ü¸ßµÄÆ¥Åä£¬ÁíÒ»¸öÉèÎªÎŞĞ§
+		// é€‰æ‹©CIOUæ›´é«˜çš„åŒ¹é…ï¼Œå¦ä¸€ä¸ªè®¾ä¸ºæ— æ•ˆ
 		if (leftMatch.ciou > rightMatch.ciou)
 		{
 			rightMatch.isValid = false;
@@ -77,7 +79,7 @@ void ArmorDetected::findLightBars()
 			leftMatch.isValid = false;
 		}
 	}
-	// 4.½á¹û¸üĞÂ
+	// 4.ç»“æœæ›´æ–°
 	vector<BBox> newLightBars;
 	vector<LightBar> detectedLightBars;
 
@@ -95,49 +97,49 @@ void ArmorDetected::findLightBars()
 		detectedLightBars.push_back(createLightBarFromBBox(rightBox));
 	}
 
-	// 4. ¸üĞÂlast_lightBars£¨¹Ø¼ü²½Öè£©
+	// 4. æ›´æ–°last_lightBarsï¼ˆå…³é”®æ­¥éª¤ï¼‰
 	if (newLightBars.size() >= 2)
 	{
-		last_lightBars = newLightBars; // ³É¹¦Æ¥Åä£¬¸üĞÂ²Î¿¼
+		last_lightBars = newLightBars; // æˆåŠŸåŒ¹é…ï¼Œæ›´æ–°å‚è€ƒ
 		lightBars = detectedLightBars;
 	}
 	else
 	{
-		findLightBarsTraditional(); // Æ¥ÅäÊ§°Ü£¬ÍË»Ø´«Í³¼ì²â
+		findLightBarsTraditional(); // åŒ¹é…å¤±è´¥ï¼Œé€€å›ä¼ ç»Ÿæ£€æµ‹
 	}
-	// ÔÚ¼ì²âµ½ÌõµÆºó£¬Ó¦ÓÃÎÈ¶¨»¯´¦Àí
+	// åœ¨æ£€æµ‹åˆ°æ¡ç¯åï¼Œåº”ç”¨ç¨³å®šåŒ–å¤„ç†
 	if (!stabilizer_initialized) {
 		lightbar_stabilizers.resize(lightBars.size());
 		stabilizer_initialized = true;
 	}
 
-	// È·±£ÎÈ¶¨»¯Æ÷ÊıÁ¿ÓëÌõµÆÊıÁ¿Æ¥Åä
+	// ç¡®ä¿ç¨³å®šåŒ–å™¨æ•°é‡ä¸æ¡ç¯æ•°é‡åŒ¹é…
 	if (lightbar_stabilizers.size() != lightBars.size()) {
 		lightbar_stabilizers.resize(lightBars.size());
 	}
 
-	// ¶ÔÃ¿¸öÌõµÆÓ¦ÓÃÎÈ¶¨»¯
+	// å¯¹æ¯ä¸ªæ¡ç¯åº”ç”¨ç¨³å®šåŒ–
 	for (int i = 0; i < lightBars.size(); i++) {
 		RotatedRect stabilized_rect = lightbar_stabilizers[i].stabilize(lightBars[i].rect);
-		lightBars[i] = LightBar(stabilized_rect);  // ÓÃÎÈ¶¨»¯ºóµÄ¾ØĞÎÖØĞÂ´´½¨ÌõµÆ
+		lightBars[i] = LightBar(stabilized_rect);  // ç”¨ç¨³å®šåŒ–åçš„çŸ©å½¢é‡æ–°åˆ›å»ºæ¡ç¯
 	}
 }
 
 void ArmorDetected::showLightBars(Mat& debugImg) const
 {
-	// ÔÚÔ´Í¼ÏñÉÏ»æÖÆ¼ì²âµ½µÄÌõµÆ
+	// åœ¨æºå›¾åƒä¸Šç»˜åˆ¶æ£€æµ‹åˆ°çš„æ¡ç¯
 	for (auto const& lightbar : lightBars)
 	{
 		Point2f vertices[4];
 		lightbar.getVertices(vertices);
-		// »æÖÆÌõµÆÂÖÀª
+		// ç»˜åˆ¶æ¡ç¯è½®å»“
 		for (int i = 0; i < 4; i++)
 		{
 			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_GREEN, 2);
 		}
-		// »æÖÆÖĞĞÄµã
+		// ç»˜åˆ¶ä¸­å¿ƒç‚¹
 		circle(debugImg, lightbar.center, 3, Config::COLOR_RED, -1);
-		// ÏÔÊ¾ÌõµÆĞÅÏ¢£¨Ê¹ÓÃ±ê×¼»¯½Ç¶È£©
+		// æ˜¾ç¤ºæ¡ç¯ä¿¡æ¯ï¼ˆä½¿ç”¨æ ‡å‡†åŒ–è§’åº¦ï¼‰
 		float normalizedAngle = abs(lightbar.angle);
 		if (normalizedAngle > 45) normalizedAngle = 90 - normalizedAngle;
 		string info = "L:" + to_string((int)lightbar.length) + "A:" + to_string((int)normalizedAngle);
@@ -147,27 +149,27 @@ void ArmorDetected::showLightBars(Mat& debugImg) const
 
 void ArmorDetected::matchArmors()
 {
-	// Çå¿ÕÉÏÒ»´Î×°¼×°åµÄ¼ì²â½á¹û
+	// æ¸…ç©ºä¸Šä¸€æ¬¡è£…ç”²æ¿çš„æ£€æµ‹ç»“æœ
 	armorBoxes.clear();
-	// ÖÁÉÙĞèÒª2¸öÌõµÆ²ÅÄÜ×é³É×°¼×°å
+	// è‡³å°‘éœ€è¦2ä¸ªæ¡ç¯æ‰èƒ½ç»„æˆè£…ç”²æ¿
 	if (lightBars.size() < 2)
 	{
 		return;
 	}
-	// Ë«ÖØÑ­»·±éÀúËùÓĞµÆÌõ×éºÏ
+	// åŒé‡å¾ªç¯éå†æ‰€æœ‰ç¯æ¡ç»„åˆ
 	for (size_t i = 0; i < lightBars.size() - 1; i++)
 	{
 		for (size_t j = 1; j < lightBars.size(); j++)
 		{
-			// ´´½¨×°¼×°åºòÑ¡
+			// åˆ›å»ºè£…ç”²æ¿å€™é€‰
 			ArmorBox armorCandidate(lightBars[i], lightBars[j]);
-			// ÑéÖ¤ÊÇ·ñÎªÓĞĞ§µÄ×°¼×°å
+			// éªŒè¯æ˜¯å¦ä¸ºæœ‰æ•ˆçš„è£…ç”²æ¿
 			if (armorCandidate.isSuitableArmor())
 			{
 				armorBoxes.push_back(armorCandidate);
 			}
 		}
-		eraseErrorRepeatArmor(armorBoxes); // É¾³ı´íÎó×°¼×°å
+		eraseErrorRepeatArmor(armorBoxes); // åˆ é™¤é”™è¯¯è£…ç”²æ¿
 	}
 }
 
@@ -175,16 +177,16 @@ void ArmorDetected::showArmors(Mat& debugImg) const
 {
 	for (const auto& armorbox : armorBoxes)
 	{
-		// »æÖÆ×°¼×°å¾ØĞÎ¿ò
+		// ç»˜åˆ¶è£…ç”²æ¿çŸ©å½¢æ¡†
 		Point2f vertices[4];
 		armorbox.getVertices(vertices);
 		for (int i = 0; i < 4; i++)
 		{
 			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_BLUE, 3);
 		}
-		// »æÖÆ×°¼×°åÖĞĞÄµã
+		// ç»˜åˆ¶è£…ç”²æ¿ä¸­å¿ƒç‚¹
 		circle(debugImg, armorbox.center, 5, Config::COLOR_RED, -1);
-		// ÏÔÊ¾×°¼×°åĞÅÏ¢
+		// æ˜¾ç¤ºè£…ç”²æ¿ä¿¡æ¯
 		string info = "Armor W:" + to_string((int)armorbox.width) + " H:" + to_string((int)armorbox.height);
 		putText(debugImg, info, armorbox.center + Point2f(10, -10), FONT_HERSHEY_SIMPLEX, 0.5, Config::COLOR_CYAN);
 		string distText = "distance:" + to_string(armorbox.distance);
@@ -196,32 +198,32 @@ void ArmorDetected::showArmors(Mat& debugImg) const
 
 bool ArmorDetected::detectArmor(const Mat& src)
 {
-	cout << "=== ¿ªÊ¼×°¼×°å¼ì²â ===" << std::endl;
-	// ±£´æÔ´Í¼Ïñ
+	cout << "=== å¼€å§‹è£…ç”²æ¿æ£€æµ‹ ===" << std::endl;
+	// ä¿å­˜æºå›¾åƒ
 	srcImg = src.clone();
 
-	// 1. Í¼ÏñÔ¤´¦Àí
+	// 1. å›¾åƒé¢„å¤„ç†
 	timer.start();
 	preprocessImage(src);
-	timer.printElapsed("Í¼ÏñÔ¤´¦Àí");
+	timer.printElapsed("å›¾åƒé¢„å¤„ç†");
 
-	// 2. µÆÌõ¼ì²â
+	// 2. ç¯æ¡æ£€æµ‹
 	timer.start();
 	findLightBars();
-	timer.printElapsed("ÌõµÆ¼ì²â");
+	timer.printElapsed("æ¡ç¯æ£€æµ‹");
 
-	// 3. ×°¼×°åÆ¥Åä
+	// 3. è£…ç”²æ¿åŒ¹é…
 	timer.start();
 	matchArmors();
-	timer.printElapsed("×°¼×°åÆ¥Åä");
+	timer.printElapsed("è£…ç”²æ¿åŒ¹é…");
 
-	// 4.PnP¾àÀë½âËã
+	// 4.PnPè·ç¦»è§£ç®—
 	timer.start();
 	solvePnPForAllArmors();
-	timer.printElapsed("PnP¾àÀë½âËã");
+	timer.printElapsed("PnPè·ç¦»è§£ç®—");
 
-	cout << "¼ì²âµ½×°¼×°åÊıÁ¿: " << armorBoxes.size() << std::endl;
-	cout << "=== ¼ì²âÍê³É ===" << std::endl << std::endl;
+	cout << "æ£€æµ‹åˆ°è£…ç”²æ¿æ•°é‡: " << armorBoxes.size() << std::endl;
+	cout << "=== æ£€æµ‹å®Œæˆ ===" << std::endl << std::endl;
 
 	return !armorBoxes.empty();
 }
@@ -262,7 +264,7 @@ void eraseErrorRepeatArmor(vector<ArmorBox>& armors)
 		}
 	}
 
-	// ´ÓºóÍùÇ°É¾³ı£¬±ÜÃâË÷Òı±ä»¯
+	// ä»åå¾€å‰åˆ é™¤ï¼Œé¿å…ç´¢å¼•å˜åŒ–
 	for (int i = armors.size() - 1; i >= 0; i--) {
 		if (toDelete[i]) {
 			armors.erase(armors.begin() + i);
@@ -273,48 +275,48 @@ void eraseErrorRepeatArmor(vector<ArmorBox>& armors)
 void ArmorDetected::initializeLastLightBars(const Rect& l_roi, const Rect& r_roi)
 {
 	last_lightBars.clear();
-	last_lightBars.push_back(BBox(l_roi, 0)); // ×óµÆÌõ£¬class_id=0
-	last_lightBars.push_back(BBox(r_roi, 1)); // ÓÒµÆÌõ£¬class_id=1
+	last_lightBars.push_back(BBox(l_roi, 0)); // å·¦ç¯æ¡ï¼Œclass_id=0
+	last_lightBars.push_back(BBox(r_roi, 1)); // å³ç¯æ¡ï¼Œclass_id=1
 	isInitialized = true;
 }
 
 void ArmorDetected::findLightBarsTraditional()
 {
 	lightBars.clear();
-	// 1.ÂÖÀª¼ì²â
+	// 1.è½®å»“æ£€æµ‹
 	vector<vector<Point>> contours;
 	findContours(binaryImg, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-	// 2.±éÀúÂÖÀª£¬É¸Ñ¡ÌõµÆ
+	// 2.éå†è½®å»“ï¼Œç­›é€‰æ¡ç¯
 	for (const auto& contour : contours)
 	{
 		double area = contourArea(contour);
-		// Ãæ»ıÉ¸Ñ¡
+		// é¢ç§¯ç­›é€‰
 		if (area < Config::MIN_LIGHT_AREA || area > Config::MAX_LIGHT_AREA) continue;
-		// ÄâºÏÍÖÔ²£¨ÖÁÉÙĞèÒª6¸öµã²ÅÄÜÄâºÏÎªÍÖÔ²£©
+		// æ‹Ÿåˆæ¤­åœ†ï¼ˆè‡³å°‘éœ€è¦6ä¸ªç‚¹æ‰èƒ½æ‹Ÿåˆä¸ºæ¤­åœ†ï¼‰
 		if (contour.size() < 6) continue;
 		RotatedRect rotatedrect = fitEllipse(contour);
-		// ´´½¨ÌõµÆ¶ÔÏó
+		// åˆ›å»ºæ¡ç¯å¯¹è±¡
 		LightBar lightBar(rotatedrect);
-		// ÑéÖ¤ÊÇ·ñÎªÓĞĞ§ÌõµÆ
+		// éªŒè¯æ˜¯å¦ä¸ºæœ‰æ•ˆæ¡ç¯
 		if (lightBar.isValidLightBar())
 		{
 			lightBars.push_back(lightBar);
 		}
 	}
-	// 3. ÖØÖÃ¸ú×Ù×´Ì¬
+	// 3. é‡ç½®è·Ÿè¸ªçŠ¶æ€
 	isInitialized = false;
 	last_lightBars.clear();
 
-	// 4. Èç¹ûÕÒµ½×ã¹»µÄµÆÌõ£¬ÖØĞÂ³õÊ¼»¯¸ú×Ù
+	// 4. å¦‚æœæ‰¾åˆ°è¶³å¤Ÿçš„ç¯æ¡ï¼Œé‡æ–°åˆå§‹åŒ–è·Ÿè¸ª
 	if (lightBars.size() >= 2)
 	{
-		// °´x×ø±êÅÅĞò£¬Ñ¡Ôñ×î×óºÍ×îÓÒµÄ×÷ÎªĞÂµÄ¸ú×ÙÄ¿±ê
+		// æŒ‰xåæ ‡æ’åºï¼Œé€‰æ‹©æœ€å·¦å’Œæœ€å³çš„ä½œä¸ºæ–°çš„è·Ÿè¸ªç›®æ ‡
 		sort(lightBars.begin(), lightBars.end(),
 			[](const LightBar& a, const LightBar& b) {
 				return a.center.x < b.center.x;
 			});
 
-		// ÖØĞÂ³õÊ¼»¯last_lightBars
+		// é‡æ–°åˆå§‹åŒ–last_lightBars
 		last_lightBars.clear();
 		last_lightBars.push_back(BBox(lightBars[0].rect.boundingRect()));
 		last_lightBars.push_back(BBox(lightBars[lightBars.size() - 1].rect.boundingRect()));
@@ -343,18 +345,18 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 {
 	Point2f center(bbox.x + bbox.width / 2.0f, bbox.y + bbox.height / 2.0f);
 	Size2f size(bbox.width, bbox.height);
-	RotatedRect rotatedRect(center, size, 0); // ½Ç¶È¿ÉÒÔ´ÓÀúÊ·ĞÅÏ¢ÍÆ¶Ï
+	RotatedRect rotatedRect(center, size, 0); // è§’åº¦å¯ä»¥ä»å†å²ä¿¡æ¯æ¨æ–­
 	return LightBar(rotatedRect);
 }
 
-// ÎÈ¶¨»¯Æ÷ÊµÏÖ
+// ç¨³å®šåŒ–å™¨å®ç°
 RotatedRect LightBarStabilizer::stabilize(const RotatedRect& current_rect) {
 	history_rects.push_back(current_rect);
 	if (history_rects.size() > Config::STABILIZE_HISTORY_SIZE) {
 		history_rects.pop_front();
 	}
 
-	// ¼ÆËã¼ÓÈ¨Æ½¾ù
+	// è®¡ç®—åŠ æƒå¹³å‡
 	Point2f avg_center(0, 0);
 	Size2f avg_size(0, 0);
 	float avg_angle = 0;
