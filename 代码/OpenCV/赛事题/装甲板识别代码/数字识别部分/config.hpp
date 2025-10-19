@@ -94,8 +94,8 @@ namespace Config {
     // 添加稳定化参数
     extern int STABILIZE_HISTORY_SIZE;     // 历史帧数
     extern float STABILIZE_WEIGHT;         // 当前帧权重
-    extern float MAX_POSITION_JUMP;        // 最大位置跳跃
-    extern float MAX_SIZE_CHANGE;          // 最大尺寸变化率
+    // extern float MAX_POSITION_JUMP;        // 最大位置跳跃
+    // extern float MAX_SIZE_CHANGE;          // 最大尺寸变化率
 }
 
 // 简单计时器类
