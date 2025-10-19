@@ -141,7 +141,6 @@ void ArmorDetected::showLightBars(Mat& debugImg) const
 		circle(debugImg, lightbar.center, 3, Config::COLOR_RED, -1);
 		// 显示条灯信息（使用标准化角度）
 		float normalizedAngle = abs(lightbar.angle);
-		if (normalizedAngle > 45) normalizedAngle = 90 - normalizedAngle;
 		string info = "L:" + to_string((int)lightbar.length) + "A:" + to_string((int)normalizedAngle);
 		putText(debugImg, info, lightbar.center + Point2f(10, -10), FONT_HERSHEY_SIMPLEX, 0.4, Config::COLOR_YELLOW, 1);
 	}
