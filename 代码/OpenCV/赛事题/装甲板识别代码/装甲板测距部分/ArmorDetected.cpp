@@ -354,6 +354,7 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 		return LightBar(rotatedRect);
 	}
 
+	// 在BBox中寻找轮廓
 	Mat roiImg = binaryImg(safeROI);
 
 	vector<vector<Point>> contours;
@@ -362,6 +363,7 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 	float angle = 0;
 	if (!contours.empty())
 	{
+		// 寻找最大轮廓
 		int maxAreaIdx = 0;
 		double maxArea = contourArea(contours[0]);
 		for (int i = 1; i < contours.size(); i++)
@@ -373,6 +375,7 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 				maxAreaIdx = i;
 			}
 		}
+		// 调整轮廓坐标到全局坐标系
 		for (auto& point : contours[maxAreaIdx])
 		{
 			point.x += bbox.x;
@@ -380,6 +383,7 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 		}
 		if (contours[maxAreaIdx].size() >= 6)
 		{
+			// 获取角度
 			RotatedRect rrect = fitEllipse(contours[maxAreaIdx]);
 			angle = rrect.angle;
 			while (angle > 90) angle -= 180;
