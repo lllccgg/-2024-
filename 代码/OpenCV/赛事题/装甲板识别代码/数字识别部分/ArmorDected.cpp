@@ -2,6 +2,38 @@
 
 void eraseErrorRepeatArmor(vector<ArmorBox>& armors); // 用于删除游离灯条导致的错误装甲板
 
+bool ArmorDetected::detectArmor(const Mat& src)
+{
+	cout << "=== 开始装甲板检测 ===" << std::endl;
+	// 保存源图像
+	srcImg = src.clone();
+
+	// 1. 图像预处理
+	timer.start();
+	preprocessImage(src);
+	timer.printElapsed("图像预处理");
+
+	// 2. 灯条检测
+	timer.start();
+	findLightBars();
+	timer.printElapsed("条灯检测");
+
+	// 3. 装甲板匹配及数字识别
+	timer.start();
+	matchArmors();
+	timer.printElapsed("装甲板匹配及数字识别");
+	
+	// 4.PnP距离解算
+	//timer.start();
+	//solvePnPForAllArmors();
+	//timer.printElapsed("PnP距离解算");
+
+	cout << "检测到装甲板数量: " << armorBoxes.size() << std::endl;
+	cout << "=== 检测完成 ===" << std::endl << std::endl;
+	
+	return !armorBoxes.empty();
+}
+
 void ArmorDetected::preprocessImage(const Mat& src)
 {
 	GaussianBlur(srcImg, srcImg, Size(3, 3), 0, 0); // 低通滤波，减少条灯二值图的断裂
@@ -45,7 +77,7 @@ void ArmorDetected::findLightBars()
 		// 2.面积和点数筛选
 		if (contourArea(contour) < Config::MIN_LIGHT_AREA ||
 			contourArea(contour) > Config::MAX_LIGHT_AREA ||
-			contour.size() < 5) continue;
+			contour.size() < 6) continue;
 
 		RotatedRect rotatedRect = fitEllipse(contour);
 		LightBar lightBar(rotatedRect);
@@ -117,6 +149,7 @@ void ArmorDetected::findLightBars()
 		RotatedRect stabilized_rect = lightbar_stabilizers[i].stabilize(lightBars[i].rect);
 		lightBars[i] = LightBar(stabilized_rect);  // 用稳定化后的矩形重新创建条灯
 	}
+
 }
 
 void ArmorDetected::showLightBars(Mat& debugImg) const
@@ -129,13 +162,13 @@ void ArmorDetected::showLightBars(Mat& debugImg) const
 		// 绘制条灯轮廓
 		for (int i = 0; i < 4; i++)
 		{
-			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_GREEN, 2);
+			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_GREEN, 1);
 		}
 		// 绘制中心点
 		circle(debugImg, lightbar.center, 3, Config::COLOR_RED, -1);
 		// 显示条灯信息（使用标准化角度）
 		float normalizedAngle = abs(lightbar.angle);
-		if (normalizedAngle > 45) normalizedAngle = 90 - normalizedAngle;
+		//if (normalizedAngle > 45) normalizedAngle = 90 - normalizedAngle;
 		string info = "L:" + to_string((int)lightbar.length) + "A:" + to_string((int)normalizedAngle);
 		putText(debugImg, info, lightbar.center + Point2f(10, -10), FONT_HERSHEY_SIMPLEX, 0.4, Config::COLOR_YELLOW, 1);
 	}
@@ -184,7 +217,7 @@ void ArmorDetected::showArmors(Mat& debugImg) const
 		armorbox.getVertices(vertices);
 		for (int i = 0; i < 4; i++)
 		{
-			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_BLUE, 3);
+			line(debugImg, vertices[i], vertices[(i + 1) % 4], Config::COLOR_BLUE, 1);
 		}
 		// 绘制装甲板中心点
 		circle(debugImg, armorbox.center, 5, Config::COLOR_RED, -1);
@@ -198,37 +231,6 @@ void ArmorDetected::showArmors(Mat& debugImg) const
 	}
 }
 
-bool ArmorDetected::detectArmor(const Mat& src)
-{
-	cout << "=== 开始装甲板检测 ===" << std::endl;
-	// 保存源图像
-	srcImg = src.clone();
-
-	// 1. 图像预处理
-	timer.start();
-	preprocessImage(src);
-	timer.printElapsed("图像预处理");
-
-	// 2. 灯条检测
-	timer.start();
-	findLightBars();
-	timer.printElapsed("条灯检测");
-
-	// 3. 装甲板匹配及数字识别
-	timer.start();
-	matchArmors();
-	timer.printElapsed("装甲板匹配及数字识别");
-	
-	// 4.PnP距离解算
-	timer.start();
-	solvePnPForAllArmors();
-	timer.printElapsed("PnP距离解算");
-
-	cout << "检测到装甲板数量: " << armorBoxes.size() << std::endl;
-	cout << "=== 检测完成 ===" << std::endl << std::endl;
-	
-	return !armorBoxes.empty();
-}
 
 void ArmorDetected::solvePnPForAllArmors()
 {
@@ -347,7 +349,52 @@ LightBar ArmorDetected::createLightBarFromBBox(const BBox& bbox)
 {
 	Point2f center(bbox.x + bbox.width / 2.0f, bbox.y + bbox.height / 2.0f);
 	Size2f size(bbox.width, bbox.height);
-	RotatedRect rotatedRect(center, size, 0); // 角度可以从历史信息推断
+
+	// 防止越界
+	Rect roi(bbox.x, bbox.y, bbox.width, bbox.height);
+	Rect imageRect(0, 0, binaryImg.cols, binaryImg.rows);
+	Rect safeROI = roi & imageRect;  // 取交集，自动裁剪到图像范围内
+
+	if (safeROI.area() <= 0) {
+		// 没有有效的ROI区域
+		RotatedRect rotatedRect(center, size, 0);
+		return LightBar(rotatedRect);
+	}
+
+	Mat roiImg = binaryImg(safeROI);
+
+	vector<vector<Point>> contours;
+	findContours(roiImg, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+	float angle = 0;
+	if (!contours.empty())
+	{
+		int maxAreaIdx = 0;
+		double maxArea = contourArea(contours[0]);
+		for (int i = 1; i < contours.size(); i++)
+		{
+			double area = contourArea(contours[i]);
+			if (area > maxArea)
+			{
+				maxArea = area;
+				maxAreaIdx = i;
+			}
+		}
+		for (auto& point : contours[maxAreaIdx])
+		{
+			point.x += bbox.x;
+			point.y += bbox.y;
+		}
+		if (contours[maxAreaIdx].size() >= 6)
+		{
+			RotatedRect rrect = fitEllipse(contours[maxAreaIdx]);
+			angle = rrect.angle;
+			while (angle > 90) angle -= 180;
+			while (angle < -90) angle += 180;
+		}
+	}
+
+	RotatedRect rotatedRect(center, size, angle);
 	return LightBar(rotatedRect);
 }
 
