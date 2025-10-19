@@ -8,9 +8,9 @@ LightBar::LightBar(const RotatedRect& rotatedRect)
 	length = max(rotatedRect.size.width, rotatedRect.size.height);
 	width = min(rotatedRect.size.width, rotatedRect.size.height);
 
-	// ½Ç¶È±ê×¼»¯´¦Àí£ºÈ·±£½Ç¶ÈÔÚºÏÀí·¶Î§ÄÚ
-	angle = rotatedRect.angle;
-	// ½«½Ç¶È¹æ·¶»¯µ½[-90, 90]·¶Î§
+	// è§’åº¦æ ‡å‡†åŒ–å¤„ç†ï¼šç¡®ä¿è§’åº¦åœ¨åˆç†èŒƒå›´å†…
+	angle = rotatedRect.angle; // èŒƒå›´[0ï¼Œ180]
+	// å°†è§’åº¦è§„èŒƒåŒ–åˆ°[-90, 90]èŒƒå›´
 	while (angle > 90) angle -= 180;
 	while (angle < -90) angle += 180;
 
@@ -19,21 +19,20 @@ LightBar::LightBar(const RotatedRect& rotatedRect)
 
 void LightBar::getVertices(Point2f vertices[4]) const
 {
-	rect.points(vertices);  // »ñÈ¡ËÄ¸ö¶¥µã
+	rect.points(vertices);  // è·å–å››ä¸ªé¡¶ç‚¹
 }
 
 bool LightBar::isValidLightBar() const
 {
-	float ratio = length / width; // ÒÔ³¤±ßÎª³¤£¬¶Ì±ßÎª¿í
-	float normalizeAngle = abs(angle); // ½Ç¶È¹æ·¶»¯µ½[0,90]·¶Î§  
-	// 1.¼ì²é³¤¿í±È
+	float ratio = length / width; // ä»¥é•¿è¾¹ä¸ºé•¿ï¼ŒçŸ­è¾¹ä¸ºå®½
+	float normalizeAngle = abs(angle); // è§’åº¦è§„èŒƒåŒ–åˆ°[0,90]èŒƒå›´ ï¼Œä¸yè½´å¤¹è§’ 
+	// 1.æ£€æŸ¥é•¿å®½æ¯”
 	if (ratio < Config::MIN_LIGHT_RATIO || ratio > Config::MAX_LIGHT_RATIO) return false;
 
-	// 2.¼ì²éÃæ»ı
+	// 2.æ£€æŸ¥é¢ç§¯
 	if (area < Config::MIN_LIGHT_AREA || area > Config::MAX_LIGHT_AREA) return false;
 
-	// 3.¼ì²é½Ç¶È
-	if (normalizeAngle > 45) normalizeAngle = 90 - normalizeAngle;
+	// 3.æ£€æŸ¥è§’åº¦
 	if (normalizeAngle > Config::MAX_ANGLE_DIFF) return false;
 
 	return true;
