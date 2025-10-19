@@ -63,8 +63,8 @@ namespace Config {
     // 稳定化参数初始化
     int STABILIZE_HISTORY_SIZE = 4;        // 历史帧数
     float STABILIZE_WEIGHT = 0.7f;         // 当前帧权重  
-    float MAX_POSITION_JUMP = 200.0f;       // 最大位置跳跃
-    float MAX_SIZE_CHANGE = 0.1f;          // 最大尺寸变化率
+    // float MAX_POSITION_JUMP = 200.0f;       // 最大位置跳跃
+    // float MAX_SIZE_CHANGE = 0.1f;          // 最大尺寸变化率
 }
 
 VideoCapture cap;
