@@ -36,7 +36,8 @@ bool ArmorDetected::detectArmor(const Mat& src)
 
 void ArmorDetected::preprocessImage(const Mat& src)
 {
-	srcImg = src.clone();
+	GaussianBlur(srcImg, srcImg, Size(3, 3), 0, 0); // 低通滤波，减少条灯二值图的断裂
+	
 	Mat hsv;
 	Mat blueChannel;
 
