@@ -5,101 +5,101 @@
 using namespace std;
 using namespace cv;
 
-// È«¾ÖÅäÖÃ²ÎÊıÍ³Ò»¹ÜÀí
+// å…¨å±€é…ç½®å‚æ•°ç»Ÿä¸€ç®¡ç†
 namespace Config {
-    // Í¼Ïñ´¦Àí²ÎÊı
-    const int IMAGE_WIDTH = 640; // Í¼Ïñ¿í¶È
-    const int IMAGE_HEIGHT = 480; // Í¼Ïñ¸ß¶È
-    extern int BINARY_THRESHOLD; // ¶şÖµ»¯ãĞÖµ
+    // å›¾åƒå¤„ç†å‚æ•°
+    const int IMAGE_WIDTH = 640; // å›¾åƒå®½åº¦
+    const int IMAGE_HEIGHT = 480; // å›¾åƒé«˜åº¦
+    extern int BINARY_THRESHOLD; // äºŒå€¼åŒ–é˜ˆå€¼
 
-    extern int h_low; // HSVÏÂÏŞH
-    extern int s_low; // HSVÏÂÏŞS
-    extern int v_low; // HSVÏÂÏŞV
-    extern int h_high; // HSVÉÏÏŞH
-    extern int s_high; // HSVÉÏÏŞS
-    extern int v_high; // HSVÉÏÏŞV
+    extern int h_low; // HSVä¸‹é™H
+    extern int s_low; // HSVä¸‹é™S
+    extern int v_low; // HSVä¸‹é™V
+    extern int h_high; // HSVä¸Šé™H
+    extern int s_high; // HSVä¸Šé™S
+    extern int v_high; // HSVä¸Šé™V
 
-    extern Scalar lower_blue;   // H, S, V ÏÂÏŞ
-    extern Scalar upper_blue; // H, S, V ÉÏÏŞ
+    extern Scalar lower_blue;   // H, S, V ä¸‹é™
+    extern Scalar upper_blue; // H, S, V ä¸Šé™
 
-    extern int kernel1_size; // ±ÕÔËËãºË´óĞ¡
-    extern int kernel2_size; // ¿ªÔËËãºË´óĞ¡
-    extern int kernel3_size; // ±ÕÔËËãºË2´óĞ¡
+    extern int kernel1_size; // é—­è¿ç®—æ ¸å¤§å°
+    extern int kernel2_size; // å¼€è¿ç®—æ ¸å¤§å°
+    extern int kernel3_size; // é—­è¿ç®—æ ¸2å¤§å°
 
-    extern int line1; // ´¹Ö±ÏßºËµÚÒ»¸ö²ÎÊı
-    extern int line2; // ´¹Ö±ÏßºËµÚ¶ş¸ö²ÎÊı
-    extern int clean1; // ÇåÀíºË´óĞ¡
-    extern int clean2; // ÇåÀíºË´óĞ¡
+    extern int line1; // å‚ç›´çº¿æ ¸ç¬¬ä¸€ä¸ªå‚æ•°
+    extern int line2; // å‚ç›´çº¿æ ¸ç¬¬äºŒä¸ªå‚æ•°
+    extern int clean1; // æ¸…ç†æ ¸å¤§å°
+    extern int clean2; // æ¸…ç†æ ¸å¤§å°
 
-    extern Mat kernel_line; // ´¹Ö±ÏßºË
+    extern Mat kernel_line; // å‚ç›´çº¿æ ¸
 
-    extern int interations; // ¸¯Ê´²Ù×÷µü´ú´ÎÊı
+    extern int interations; // è…èš€æ“ä½œè¿­ä»£æ¬¡æ•°
 
-    // ×°¼×°å¼ì²â²ÎÊı
-    extern double MIN_LIGHT_RATIO; // ×îĞ¡µÆÌõ³¤¿í±È
-    extern double MAX_LIGHT_RATIO; // ×î´óµÆÌõ³¤¿í±È
-    extern double MAX_ANGLE_DIFF; // ÌõµÆ×î´ó½Ç¶ÈÆ«²î 
+    // è£…ç”²æ¿æ£€æµ‹å‚æ•°
+    extern double MIN_LIGHT_RATIO; // æœ€å°ç¯æ¡é•¿å®½æ¯”
+    extern double MAX_LIGHT_RATIO; // æœ€å¤§ç¯æ¡é•¿å®½æ¯”
+    extern double MAX_ANGLE_DIFF; // æ¡ç¯æœ€å¤§è§’åº¦åå·® 
 
-    // ×°¼×°åÆ¥Åä²ÎÊı
-    extern float MAX_ARMOR_ANGLE_DIFF; // ×î´ó½Ç¶È²î£¨¶È£©
-    extern float MAX_LENGTH_RATIO; // ×î´ó³¤¶È±È²îÒì£¨Á½¸öÌõµÆµÄ³¤¶È±È£©
-    extern float MAX_DISPLACEMENT_ANGLE; // ×î´ó´íÎ»½Ç£¨¶È£©
-    extern float MIN_ARMOR_ASPECT_RATIO; // ×îĞ¡×°¼×°å¿í¸ß±È
-    extern float MAX_ARMOR_ASPECT_RATIO; // ×î´ó×°¼×°å¿í¸ß±È
-    extern float MIN_LIGHT_AREA; // ×îĞ¡Ãæ»ı
-    extern float MAX_LIGHT_AREA; // ×î´óÃæ»ı
+    // è£…ç”²æ¿åŒ¹é…å‚æ•°
+    extern float MAX_ARMOR_ANGLE_DIFF; // æœ€å¤§è§’åº¦å·®ï¼ˆåº¦ï¼‰
+    extern float MAX_LENGTH_RATIO; // æœ€å¤§é•¿åº¦æ¯”å·®å¼‚ï¼ˆä¸¤ä¸ªæ¡ç¯çš„é•¿åº¦æ¯”ï¼‰
+    extern float MAX_DISPLACEMENT_ANGLE; // æœ€å¤§é”™ä½è§’ï¼ˆåº¦ï¼‰
+    extern float MIN_ARMOR_ASPECT_RATIO; // æœ€å°è£…ç”²æ¿å®½é«˜æ¯”
+    extern float MAX_ARMOR_ASPECT_RATIO; // æœ€å¤§è£…ç”²æ¿å®½é«˜æ¯”
+    extern float MIN_LIGHT_AREA; // æœ€å°é¢ç§¯
+    extern float MAX_LIGHT_AREA; // æœ€å¤§é¢ç§¯
 
 
-    // µ÷ÊÔÏÔÊ¾ÑÕÉ«
-    const Scalar COLOR_GREEN = Scalar(0, 255, 0); // ÂÌÉ«
-    const Scalar COLOR_RED = Scalar(0, 0, 255); // ºìÉ«
-    const Scalar COLOR_BLUE = Scalar(255, 0, 0); // À¶É«
-    const Scalar COLOR_YELLOW = Scalar(0, 255, 255); // »ÆÉ«
-    const Scalar COLOR_CYAN = Scalar(255, 255, 0); // ÇàÉ«£¨ĞÂÔö£©
-    const Scalar COLOR_MAGENTA = Scalar(255, 0, 255); // ÑóºìÉ«£¨ĞÂÔö£©
-    const Scalar COLOR_WHITE = Scalar(255, 255, 255); // °×É«
+    // è°ƒè¯•æ˜¾ç¤ºé¢œè‰²
+    const Scalar COLOR_GREEN = Scalar(0, 255, 0); // ç»¿è‰²
+    const Scalar COLOR_RED = Scalar(0, 0, 255); // çº¢è‰²
+    const Scalar COLOR_BLUE = Scalar(255, 0, 0); // è“è‰²
+    const Scalar COLOR_YELLOW = Scalar(0, 255, 255); // é»„è‰²
+    const Scalar COLOR_CYAN = Scalar(255, 255, 0); // é’è‰²ï¼ˆæ–°å¢ï¼‰
+    const Scalar COLOR_MAGENTA = Scalar(255, 0, 255); // æ´‹çº¢è‰²ï¼ˆæ–°å¢ï¼‰
+    const Scalar COLOR_WHITE = Scalar(255, 255, 255); // ç™½è‰²
 
-    // Ïà»úµÄ3¡Á3ÄÚ²Î¾ØÕó
+    // ç›¸æœºçš„3Ã—3å†…å‚çŸ©é˜µ
     const Mat cameraMatrix = (Mat_<double>(3, 3) <<
         619.2342625843423, 0., 332.4107997008066, // fx, 0, cx
         0., 619.4356974250945, 237.9417298019534, // 0, fy, cy  
         0., 0., 1.                 // 0, 0, 1
         );
 
-    // 5¸ö»û±äÏµÊı£ºk1, k2, p1, p2, k3
+    // 5ä¸ªç•¸å˜ç³»æ•°ï¼šk1, k2, p1, p2, k3
     const Mat distCoeffs = (Mat_<double>(5, 1) <<
         -0.1857965552869972, 0.7150658975139499, 0.003183596780102963, 0.0009642865213194783, -0.8848275920367117
         );
 
-    // ×°¼×°åÊµ¼Ê³ß´ç(ºÁÃ×)
-    const double ARMOR_WIDTH = 145.0; // ×°¼×°å¿í¶È
-    const double LIGHT_HEIGHT = 65.0; // ÌõµÆ¸ß¶È
+    // è£…ç”²æ¿å®é™…å°ºå¯¸(æ¯«ç±³)
+    const double ARMOR_WIDTH = 145.0; // è£…ç”²æ¿å®½åº¦
+    const double LIGHT_HEIGHT = 65.0; // æ¡ç¯é«˜åº¦
 
-    extern const char* const svm_path; // svmÄ£ĞÍÂ·¾¶
-    extern const char* const onnx_path; // onnxÄ£ĞÍÂ·¾¶
+    extern const char* const svm_path; // svmæ¨¡å‹è·¯å¾„
+    extern const char* const onnx_path; // onnxæ¨¡å‹è·¯å¾„
 
-    extern int bianry; // ÊäÈëÄ£ĞÍµÄÍ¼Ïñ¶şÖµ»¯ãĞÖµ
+    extern int bianry; // è¾“å…¥æ¨¡å‹çš„å›¾åƒäºŒå€¼åŒ–é˜ˆå€¼
 
-    extern int roi_x; // ¸Ä±äÊäÈëÄ£ĞÍµÄÍ¼Ïñx·½Ïò´óĞ¡
-    extern int roi_y; // ¸Ä±äÊäÈëÄ£ĞÍµÄÍ¼Ïñy·½Ïò´óĞ¡
+    extern int roi_x; // æ”¹å˜è¾“å…¥æ¨¡å‹çš„å›¾åƒxæ–¹å‘å¤§å°
+    extern int roi_y; // æ”¹å˜è¾“å…¥æ¨¡å‹çš„å›¾åƒyæ–¹å‘å¤§å°
 
-    extern int x_offset; // x·½ÏòÆ«ÒÆ
-    extern int y_offset; // y·½ÏòÆ«ÒÆ
+    extern int x_offset; // xæ–¹å‘åç§»
+    extern int y_offset; // yæ–¹å‘åç§»
 
-    // µ÷½ÚÆØ¹â
-    extern int gamma_val; // ³õÊ¼Ù¤ÂíÖµ£¨x10£¬ÀıÈç1.8£©
-    extern int trunc_val; // ³õÊ¼ÁÁ¶È½Ø¶ÏãĞÖµ
+    // è°ƒèŠ‚æ›å…‰
+    extern int gamma_val; // åˆå§‹ä¼½é©¬å€¼ï¼ˆx10ï¼Œä¾‹å¦‚1.8ï¼‰
+    extern int trunc_val; // åˆå§‹äº®åº¦æˆªæ–­é˜ˆå€¼
 
-    extern float warp_diff; // Í¸ÊÓÆ«²î
+    extern float warp_diff; // é€è§†åå·®
 
-    // Ìí¼ÓÎÈ¶¨»¯²ÎÊı
-    extern int STABILIZE_HISTORY_SIZE;     // ÀúÊ·Ö¡Êı
-    extern float STABILIZE_WEIGHT;         // µ±Ç°Ö¡È¨ÖØ
-    extern float MAX_POSITION_JUMP;        // ×î´óÎ»ÖÃÌøÔ¾
-    extern float MAX_SIZE_CHANGE;          // ×î´ó³ß´ç±ä»¯ÂÊ
+    // æ·»åŠ ç¨³å®šåŒ–å‚æ•°
+    extern int STABILIZE_HISTORY_SIZE;     // å†å²å¸§æ•°
+    extern float STABILIZE_WEIGHT;         // å½“å‰å¸§æƒé‡
+    // extern float MAX_POSITION_JUMP;        // æœ€å¤§ä½ç½®è·³è·ƒ
+    // extern float MAX_SIZE_CHANGE;          // æœ€å¤§å°ºå¯¸å˜åŒ–ç‡
 }
 
-// ¼òµ¥¼ÆÊ±Æ÷Àà
+// ç®€å•è®¡æ—¶å™¨ç±»
 class SimpleTimer
 {
 private:
@@ -113,7 +113,7 @@ public:
     {
         auto end_time = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-        return duration.count() / 1000.0f; // ×ª»»ÎªºÁÃë
+        return duration.count() / 1000.0f; // è½¬æ¢ä¸ºæ¯«ç§’
     }
     void printElapsed(const string& name)
     {
